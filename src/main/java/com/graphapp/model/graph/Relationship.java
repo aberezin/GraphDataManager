@@ -1,46 +1,44 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * Represents a relationship between two nodes in the graph database
+ * Represents a relationship in the graph database
  */
 @RelationshipProperties
 public class Relationship {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(UUIDStringGenerator.class)
     private Long id;
 
-    @Property("type")
     private String type;
 
-    // Source node - needs to be handled differently in Neo4j
     private Node source;
 
-    // Target node must be annotated with @TargetNode
     @TargetNode
     private Node target;
 
-    // Dynamic properties stored as a map
-    private Map<String, Object> properties = new HashMap<>();
+    private Map<String, Object> properties;
 
     public Relationship() {
-        // Default constructor required by Spring Data Neo4j
+        // Default constructor required by Neo4j
+        this.properties = new HashMap<>();
     }
 
     public Relationship(String type, Node source, Node target) {
         this.type = type;
         this.source = source;
         this.target = target;
+        this.properties = new HashMap<>();
     }
 
     public Relationship(String type, Node source, Node target, Map<String, Object> properties) {
@@ -90,16 +88,33 @@ public class Relationship {
         this.properties = properties;
     }
 
+    /**
+     * Add a property to the relationship
+     */
     public void addProperty(String key, Object value) {
+        if (this.properties == null) {
+            this.properties = new HashMap<>();
+        }
         this.properties.put(key, value);
     }
 
+    /**
+     * Get a property value
+     */
     public Object getProperty(String key) {
+        if (this.properties == null) {
+            return null;
+        }
         return this.properties.get(key);
     }
 
+    /**
+     * Remove a property
+     */
     public void removeProperty(String key) {
-        this.properties.remove(key);
+        if (this.properties != null) {
+            this.properties.remove(key);
+        }
     }
 
     @Override

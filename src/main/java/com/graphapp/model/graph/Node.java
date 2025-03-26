@@ -1,8 +1,8 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Property;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,30 +15,34 @@ import java.util.Objects;
 public class Node {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(UUIDStringGenerator.class)
     private Long id;
 
-    @Property("label")
     private String label;
 
-    @Property("type")
     private String type;
 
-    // Dynamic properties stored as a map
-    private Map<String, Object> properties = new HashMap<>();
+    private Map<String, Object> properties;
 
     public Node() {
-        // Default constructor required by Spring Data Neo4j
+        // Default constructor required by Neo4j
+        this.properties = new HashMap<>();
     }
 
-    public Node(String label, String type) {
-        this.label = label;
+    public Node(String type) {
         this.type = type;
+        this.properties = new HashMap<>();
     }
 
-    public Node(String label, String type, Map<String, Object> properties) {
-        this.label = label;
+    public Node(String type, String label) {
         this.type = type;
+        this.label = label;
+        this.properties = new HashMap<>();
+    }
+
+    public Node(String type, String label, Map<String, Object> properties) {
+        this.type = type;
+        this.label = label;
         this.properties = properties != null ? properties : new HashMap<>();
     }
 
@@ -74,16 +78,33 @@ public class Node {
         this.properties = properties;
     }
 
+    /**
+     * Add a property to the node
+     */
     public void addProperty(String key, Object value) {
+        if (this.properties == null) {
+            this.properties = new HashMap<>();
+        }
         this.properties.put(key, value);
     }
 
+    /**
+     * Get a property value
+     */
     public Object getProperty(String key) {
+        if (this.properties == null) {
+            return null;
+        }
         return this.properties.get(key);
     }
 
+    /**
+     * Remove a property
+     */
     public void removeProperty(String key) {
-        this.properties.remove(key);
+        if (this.properties != null) {
+            this.properties.remove(key);
+        }
     }
 
     @Override

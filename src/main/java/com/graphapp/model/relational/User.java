@@ -126,6 +126,7 @@ public class User {
                 ", email='" + email + '\'' +
                 ", firstName='" + firstName + '\'' +
                 ", lastName='" + lastName + '\'' +
+                ", projectsCount=" + (projects != null ? projects.size() : 0) +
                 '}';
     }
 }
