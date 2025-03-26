@@ -5,16 +5,29 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
+// Logging middleware
+app.use((req, res, next) => {
+  console.log(`Incoming request: ${req.method} ${req.url}`);
+  next();
+});
+
 // Proxy middleware for API requests
 const apiProxy = createProxyMiddleware({
   target: 'http://localhost:8080',
   changeOrigin: true,
   logLevel: 'debug',
-  pathRewrite: { '^/api': '/api' },
+  // Don't rewrite paths - we want to keep the /api prefix
+  pathRewrite: null,
   onError: (err, req, res) => {
     console.error('Proxy error:', err);
     res.status(500).json({ error: 'Proxy error', message: err.message });
   }
+});
+
+// Also catch requests to /graph directly and redirect them to /api/graph
+app.use('/graph', (req, res) => {
+  console.log(`Redirecting ${req.url} to /api${req.url}`);
+  res.redirect(`/api/graph${req.url.replace('/graph', '')}`);
 });
 
 // Use the proxy middleware
