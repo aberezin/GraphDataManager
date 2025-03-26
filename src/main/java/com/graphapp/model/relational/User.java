@@ -24,7 +24,7 @@ public class User {
     @Column(name = "last_name")
     private String lastName;
     
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Project> projects = new ArrayList<>();
     
     // Default constructor required by JPA

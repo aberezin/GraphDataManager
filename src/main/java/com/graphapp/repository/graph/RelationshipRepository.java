@@ -1,6 +1,5 @@
 package com.graphapp.repository.graph;
 
-import com.graphapp.model.graph.Node;
 import com.graphapp.model.graph.Relationship;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -14,19 +13,21 @@ public interface RelationshipRepository extends Neo4jRepository<Relationship, Lo
     
     List<Relationship> findByType(String type);
     
-    List<Relationship> findBySourceNode(Node sourceNode);
+    @Query("MATCH (n)-[r]->(m) WHERE id(r) = $relationshipId RETURN r")
+    Relationship findRelationshipById(@Param("relationshipId") Long relationshipId);
     
-    List<Relationship> findByTargetNode(Node targetNode);
-    
-    @Query("MATCH ()-[r]->() WHERE r.type CONTAINS $query RETURN r")
-    List<Relationship> searchRelationships(@Param("query") String query);
-    
-    @Query("MATCH ()-[r]->() RETURN r LIMIT 100")
-    List<Relationship> findLimited();
-    
-    @Query("MATCH (source)-[r]->(target) WHERE ID(source) = $sourceId AND ID(target) = $targetId RETURN r")
+    @Query("MATCH (n)-[r]->(m) WHERE id(n) = $sourceId AND id(m) = $targetId RETURN r")
     List<Relationship> findRelationshipsBetweenNodes(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
     
-    @Query("MATCH ()-[r]->() RETURN count(r)")
-    long countRelationships();
+    @Query("MATCH (n)-[r]->(m) WHERE toLower(r.type) CONTAINS toLower($searchTerm) RETURN r, n, m")
+    List<Relationship> searchRelationships(@Param("searchTerm") String searchTerm);
+    
+    @Query("MATCH (n)-[r]->(m) RETURN r, n, m")
+    List<Relationship> findAllRelationshipsWithNodes();
+    
+    @Query("MATCH (n)-[r]->(m) WHERE id(n) = $nodeId RETURN r, n, m")
+    List<Relationship> findRelationshipsWithSourceNode(@Param("nodeId") Long nodeId);
+    
+    @Query("MATCH (n)-[r]->(m) WHERE id(m) = $nodeId RETURN r, n, m")
+    List<Relationship> findRelationshipsWithTargetNode(@Param("nodeId") Long nodeId);
 }

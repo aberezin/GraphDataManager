@@ -1,22 +1,22 @@
 package com.graphapp.config;
 
+import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.Properties;
 
-/**
- * Configuration for SQLite database using Hibernate as ORM
- */
 @Configuration
+@EnableJpaRepositories(basePackages = "com.graphapp.repository.relational")
 @EnableTransactionManagement
 public class DatabaseConfig {
 
@@ -28,10 +28,10 @@ public class DatabaseConfig {
 
     @Bean
     public DataSource dataSource() {
-        DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName("org.sqlite.JDBC");
-        dataSource.setUrl("jdbc:sqlite:graph_app.db");
-        return dataSource;
+        return DataSourceBuilder.create()
+                .url(env.getProperty("spring.datasource.url"))
+                .driverClassName(env.getProperty("spring.datasource.driver-class-name"))
+                .build();
     }
 
     @Bean
@@ -41,22 +41,22 @@ public class DatabaseConfig {
         em.setPackagesToScan("com.graphapp.model.relational");
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        vendorAdapter.setGenerateDdl(true);
         em.setJpaVendorAdapter(vendorAdapter);
 
-        Properties hibernateProperties = new Properties();
-        hibernateProperties.setProperty("hibernate.dialect", "org.hibernate.dialect.SQLiteDialect");
-        hibernateProperties.setProperty("hibernate.hbm2ddl.auto", "update");
-        hibernateProperties.setProperty("hibernate.show_sql", "true");
-        em.setJpaProperties(hibernateProperties);
+        Properties properties = new Properties();
+        properties.setProperty("hibernate.dialect", env.getProperty("spring.jpa.database-platform"));
+        properties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("spring.jpa.hibernate.ddl-auto"));
+        properties.setProperty("hibernate.show_sql", env.getProperty("spring.jpa.show-sql"));
+        properties.setProperty("hibernate.format_sql", env.getProperty("spring.jpa.properties.hibernate.format_sql"));
+        em.setJpaProperties(properties);
 
         return em;
     }
 
     @Bean
-    public PlatformTransactionManager transactionManager() {
+    public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
-        transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
+        transactionManager.setEntityManagerFactory(emf);
         return transactionManager;
     }
 }
