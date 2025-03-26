@@ -9,25 +9,18 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface RelationshipRepository extends Neo4jRepository<Relationship, Long> {
+public interface RelationshipRepository extends Neo4jRepository<Relationship, String> {
     
     List<Relationship> findByType(String type);
     
-    @Query("MATCH (n)-[r]->(m) WHERE id(r) = $relationshipId RETURN r")
-    Relationship findRelationshipById(@Param("relationshipId") Long relationshipId);
-    
-    @Query("MATCH (n)-[r]->(m) WHERE id(n) = $sourceId AND id(m) = $targetId RETURN r")
-    List<Relationship> findRelationshipsBetweenNodes(@Param("sourceId") Long sourceId, @Param("targetId") Long targetId);
-    
-    @Query("MATCH (n)-[r]->(m) WHERE toLower(r.type) CONTAINS toLower($searchTerm) RETURN r, n, m")
+    @Query("MATCH (s)-[r]->(t) WHERE r.type CONTAINS $searchTerm RETURN r, s, t")
     List<Relationship> searchRelationships(@Param("searchTerm") String searchTerm);
     
-    @Query("MATCH (n)-[r]->(m) RETURN r, n, m")
+    @Query("MATCH (s)-[r]->(t) RETURN r, s, t")
     List<Relationship> findAllRelationshipsWithNodes();
     
-    @Query("MATCH (n)-[r]->(m) WHERE id(n) = $nodeId RETURN r, n, m")
-    List<Relationship> findRelationshipsWithSourceNode(@Param("nodeId") Long nodeId);
-    
-    @Query("MATCH (n)-[r]->(m) WHERE id(m) = $nodeId RETURN r, n, m")
-    List<Relationship> findRelationshipsWithTargetNode(@Param("nodeId") Long nodeId);
+    @Query("MATCH (s)-[r]->(t) WHERE id(s) = $sourceId AND id(t) = $targetId RETURN r")
+    List<Relationship> findRelationshipsBetweenNodes(
+            @Param("sourceId") String sourceId, 
+            @Param("targetId") String targetId);
 }

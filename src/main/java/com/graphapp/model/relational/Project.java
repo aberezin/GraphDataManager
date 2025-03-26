@@ -11,34 +11,35 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "name", nullable = false)
+    @Column(nullable = false)
     private String name;
     
-    @Column(name = "description")
+    @Column(columnDefinition = "TEXT")
     private String description;
     
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
     
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt = LocalDateTime.now();
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
     
-    // Default constructor required by JPA
+    // Default constructor
     public Project() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+    }
+    
+    public Project(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
     
     public Project(String name, String description, User user) {
         this.name = name;
         this.description = description;
         this.user = user;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
     
     // Getters and Setters
@@ -56,7 +57,6 @@ public class Project {
     
     public void setName(String name) {
         this.name = name;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public String getDescription() {
@@ -65,7 +65,6 @@ public class Project {
     
     public void setDescription(String description) {
         this.description = description;
-        this.updatedAt = LocalDateTime.now();
     }
     
     public LocalDateTime getCreatedAt() {
@@ -90,12 +89,15 @@ public class Project {
     
     public void setUser(User user) {
         this.user = user;
-        this.updatedAt = LocalDateTime.now();
     }
     
-    // Pre-update callback
+    // Before update callback to update the updatedAt timestamp
     @PreUpdate
-    public void preUpdate() {
+    @PrePersist
+    public void updateTimestamps() {
         this.updatedAt = LocalDateTime.now();
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
     }
 }

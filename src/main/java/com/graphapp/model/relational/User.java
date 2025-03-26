@@ -12,10 +12,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
     
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
     
     @Column(name = "first_name")
@@ -27,8 +27,13 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Project> projects = new ArrayList<>();
     
-    // Default constructor required by JPA
+    // Default constructor
     public User() {
+    }
+    
+    public User(String username, String email) {
+        this.username = username;
+        this.email = email;
     }
     
     public User(String username, String email, String firstName, String lastName) {
@@ -87,7 +92,6 @@ public class User {
         this.projects = projects;
     }
     
-    // Helper methods
     public void addProject(Project project) {
         projects.add(project);
         project.setUser(this);
