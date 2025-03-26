@@ -1,6 +1,6 @@
 package com.graphapp.repository.graph;
 
-import com.graphapp.model.graph.Node;
+import com.graphapp.model.graph.GraphNode;
 import com.graphapp.model.graph.Relationship;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -30,7 +30,7 @@ public interface RelationshipRepository extends Neo4jRepository<Relationship, Lo
      * @param source The source node.
      * @return The list of relationships.
      */
-    List<Relationship> findBySource(Node source);
+    List<Relationship> findBySource(GraphNode source);
     
     /**
      * Find relationships by target node.
@@ -38,7 +38,7 @@ public interface RelationshipRepository extends Neo4jRepository<Relationship, Lo
      * @param target The target node.
      * @return The list of relationships.
      */
-    List<Relationship> findByTarget(Node target);
+    List<Relationship> findByTarget(GraphNode target);
     
     /**
      * Find relationships by source and target nodes.
@@ -47,7 +47,7 @@ public interface RelationshipRepository extends Neo4jRepository<Relationship, Lo
      * @param target The target node.
      * @return The list of relationships.
      */
-    List<Relationship> findBySourceAndTarget(Node source, Node target);
+    List<Relationship> findBySourceAndTarget(GraphNode source, GraphNode target);
     
     /**
      * Find relationships by source node ID or target node ID.

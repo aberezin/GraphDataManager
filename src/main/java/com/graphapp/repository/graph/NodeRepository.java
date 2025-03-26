@@ -1,6 +1,6 @@
 package com.graphapp.repository.graph;
 
-import com.graphapp.model.graph.Node;
+import com.graphapp.model.graph.GraphNode;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +13,7 @@ import java.util.Map;
  * Repository for Node entities in Neo4j.
  */
 @Repository
-public interface NodeRepository extends Neo4jRepository<Node, Long> {
+public interface NodeRepository extends Neo4jRepository<GraphNode, Long> {
     
     /**
      * Find nodes by type.
@@ -21,7 +21,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @param type The type of the nodes.
      * @return The list of nodes.
      */
-    List<Node> findByType(String type);
+    List<GraphNode> findByType(String type);
     
     /**
      * Find nodes by label.
@@ -29,7 +29,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @param label The label of the nodes.
      * @return The list of nodes.
      */
-    List<Node> findByLabel(String label);
+    List<GraphNode> findByLabel(String label);
     
     /**
      * Find nodes by type and label.
@@ -38,7 +38,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @param label The label of the nodes.
      * @return The list of nodes.
      */
-    List<Node> findByTypeAndLabel(String type, String label);
+    List<GraphNode> findByTypeAndLabel(String type, String label);
     
     /**
      * Find nodes by a specific property value.
@@ -48,7 +48,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @return The list of nodes.
      */
     @Query("MATCH (n) WHERE n.properties[$propertyName] = $propertyValue RETURN n")
-    List<Node> findByProperty(@Param("propertyName") String propertyName, 
+    List<GraphNode> findByProperty(@Param("propertyName") String propertyName, 
                               @Param("propertyValue") Object propertyValue);
     
     /**
@@ -58,7 +58,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @return The list of nodes.
      */
     @Query("MATCH (n) WHERE n.label CONTAINS $query OR n.type CONTAINS $query RETURN n")
-    List<Node> searchNodes(@Param("query") String query);
+    List<GraphNode> searchNodes(@Param("query") String query);
     
     /**
      * Find nodes with a specific label in their labels list.
@@ -67,7 +67,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @return The list of nodes.
      */
     @Query("MATCH (n) WHERE $label IN n.labels RETURN n")
-    List<Node> findByLabelInList(@Param("label") String label);
+    List<GraphNode> findByLabelInList(@Param("label") String label);
     
     /**
      * Get the count of nodes by type.
@@ -84,7 +84,7 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @return The list of nodes.
      */
     @Query("MATCH (n)-[r]-(m) WHERE ID(m) = $nodeId RETURN DISTINCT n")
-    List<Node> findConnectedNodes(@Param("nodeId") Long nodeId);
+    List<GraphNode> findConnectedNodes(@Param("nodeId") Long nodeId);
     
     /**
      * Find nodes that are connected to the given node through a specific relationship type.
@@ -94,6 +94,6 @@ public interface NodeRepository extends Neo4jRepository<Node, Long> {
      * @return The list of nodes.
      */
     @Query("MATCH (n)-[r:$relationshipType]-(m) WHERE ID(m) = $nodeId RETURN DISTINCT n")
-    List<Node> findConnectedNodesByRelationshipType(@Param("nodeId") Long nodeId, 
+    List<GraphNode> findConnectedNodesByRelationshipType(@Param("nodeId") Long nodeId, 
                                                   @Param("relationshipType") String relationshipType);
 }

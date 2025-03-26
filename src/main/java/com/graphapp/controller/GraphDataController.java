@@ -1,6 +1,6 @@
 package com.graphapp.controller;
 
-import com.graphapp.model.graph.Node;
+import com.graphapp.model.graph.GraphNode;
 import com.graphapp.model.graph.Relationship;
 import com.graphapp.service.GraphDataService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public class GraphDataController {
      * @return The list of nodes.
      */
     @GetMapping("/nodes")
-    public ResponseEntity<List<Node>> getAllNodes() {
+    public ResponseEntity<List<GraphNode>> getAllNodes() {
         return ResponseEntity.ok(graphDataService.getAllNodes());
     }
 
@@ -48,8 +48,8 @@ public class GraphDataController {
      * @return The node if found, or a 404 response.
      */
     @GetMapping("/nodes/{id}")
-    public ResponseEntity<Node> getNodeById(@PathVariable Long id) {
-        Optional<Node> node = graphDataService.getNodeById(id);
+    public ResponseEntity<GraphNode> getNodeById(@PathVariable Long id) {
+        Optional<GraphNode> node = graphDataService.getNodeById(id);
         return node.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -61,7 +61,7 @@ public class GraphDataController {
      * @return The created node.
      */
     @PostMapping("/nodes")
-    public ResponseEntity<Node> createNode(@RequestBody Node node) {
+    public ResponseEntity<GraphNode> createNode(@RequestBody GraphNode node) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(graphDataService.createNode(node));
     }
@@ -74,9 +74,9 @@ public class GraphDataController {
      * @return The updated node, or a 404 response.
      */
     @PutMapping("/nodes/{id}")
-    public ResponseEntity<Node> updateNode(@PathVariable Long id, @RequestBody Node node) {
+    public ResponseEntity<GraphNode> updateNode(@PathVariable Long id, @RequestBody GraphNode node) {
         try {
-            Node updatedNode = graphDataService.updateNode(id, node);
+            GraphNode updatedNode = graphDataService.updateNode(id, node);
             return ResponseEntity.ok(updatedNode);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -106,7 +106,7 @@ public class GraphDataController {
      * @return The list of nodes.
      */
     @GetMapping("/nodes/type/{type}")
-    public ResponseEntity<List<Node>> findNodesByType(@PathVariable String type) {
+    public ResponseEntity<List<GraphNode>> findNodesByType(@PathVariable String type) {
         return ResponseEntity.ok(graphDataService.findNodesByType(type));
     }
 
@@ -117,7 +117,7 @@ public class GraphDataController {
      * @return The list of nodes.
      */
     @GetMapping("/nodes/label/{label}")
-    public ResponseEntity<List<Node>> findNodesByLabel(@PathVariable String label) {
+    public ResponseEntity<List<GraphNode>> findNodesByLabel(@PathVariable String label) {
         return ResponseEntity.ok(graphDataService.findNodesByLabel(label));
     }
 
@@ -128,7 +128,7 @@ public class GraphDataController {
      * @return The list of nodes.
      */
     @GetMapping("/nodes/search")
-    public ResponseEntity<List<Node>> searchNodes(@RequestParam String query) {
+    public ResponseEntity<List<GraphNode>> searchNodes(@RequestParam String query) {
         return ResponseEntity.ok(graphDataService.searchNodes(query));
     }
 

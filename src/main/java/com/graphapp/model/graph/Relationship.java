@@ -22,10 +22,10 @@ public class Relationship {
     @Property("type")
     private String type;
     
-    private Node source;
+    private GraphNode source;
     
     @TargetNode
-    private Node target;
+    private GraphNode target;
     
     @Property("properties")
     private Map<String, Object> properties;
@@ -44,7 +44,7 @@ public class Relationship {
      * @param source The source node.
      * @param target The target node.
      */
-    public Relationship(String type, Node source, Node target) {
+    public Relationship(String type, GraphNode source, GraphNode target) {
         this();
         this.type = type;
         this.source = source;
@@ -59,7 +59,7 @@ public class Relationship {
      * @param target The target node.
      * @param properties The map of properties.
      */
-    public Relationship(String type, Node source, Node target, Map<String, Object> properties) {
+    public Relationship(String type, GraphNode source, GraphNode target, Map<String, Object> properties) {
         this.type = type;
         this.source = source;
         this.target = target;
@@ -107,7 +107,7 @@ public class Relationship {
      * 
      * @return The source node.
      */
-    public Node getSource() {
+    public GraphNode getSource() {
         return source;
     }
     
@@ -116,7 +116,7 @@ public class Relationship {
      * 
      * @param source The source node.
      */
-    public void setSource(Node source) {
+    public void setSource(GraphNode source) {
         this.source = source;
     }
     
@@ -125,7 +125,7 @@ public class Relationship {
      * 
      * @return The target node.
      */
-    public Node getTarget() {
+    public GraphNode getTarget() {
         return target;
     }
     
@@ -134,7 +134,7 @@ public class Relationship {
      * 
      * @param target The target node.
      */
-    public void setTarget(Node target) {
+    public void setTarget(GraphNode target) {
         this.target = target;
     }
     

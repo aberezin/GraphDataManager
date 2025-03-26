@@ -1,6 +1,6 @@
 package com.graphapp.service;
 
-import com.graphapp.model.graph.Node;
+import com.graphapp.model.graph.GraphNode;
 import com.graphapp.model.graph.Relationship;
 import com.graphapp.repository.graph.NodeRepository;
 import com.graphapp.repository.graph.RelationshipRepository;
@@ -39,7 +39,7 @@ public class GraphDataService {
      * 
      * @return The list of nodes.
      */
-    public List<Node> getAllNodes() {
+    public List<GraphNode> getAllNodes() {
         return nodeRepository.findAll();
     }
     
@@ -49,7 +49,7 @@ public class GraphDataService {
      * @param id The ID of the node.
      * @return An Optional containing the node if found.
      */
-    public Optional<Node> getNodeById(Long id) {
+    public Optional<GraphNode> getNodeById(Long id) {
         return nodeRepository.findById(id);
     }
     
@@ -60,7 +60,7 @@ public class GraphDataService {
      * @return The created node.
      */
     @Transactional
-    public Node createNode(Node node) {
+    public GraphNode createNode(GraphNode node) {
         return nodeRepository.save(node);
     }
     
@@ -73,7 +73,7 @@ public class GraphDataService {
      * @throws RuntimeException if the node is not found.
      */
     @Transactional
-    public Node updateNode(Long id, Node nodeDetails) {
+    public GraphNode updateNode(Long id, GraphNode nodeDetails) {
         return nodeRepository.findById(id)
                 .map(existingNode -> {
                     if (nodeDetails.getLabel() != null) {
@@ -101,7 +101,7 @@ public class GraphDataService {
      */
     @Transactional
     public void deleteNode(Long id) {
-        Node node = nodeRepository.findById(id)
+        GraphNode node = nodeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Node not found with id: " + id));
         nodeRepository.delete(node);
     }
@@ -112,7 +112,7 @@ public class GraphDataService {
      * @param type The type of the nodes.
      * @return The list of nodes.
      */
-    public List<Node> findNodesByType(String type) {
+    public List<GraphNode> findNodesByType(String type) {
         return nodeRepository.findByType(type);
     }
     
@@ -122,7 +122,7 @@ public class GraphDataService {
      * @param label The label of the nodes.
      * @return The list of nodes.
      */
-    public List<Node> findNodesByLabel(String label) {
+    public List<GraphNode> findNodesByLabel(String label) {
         return nodeRepository.findByLabel(label);
     }
     
@@ -132,7 +132,7 @@ public class GraphDataService {
      * @param query The search query.
      * @return The list of nodes.
      */
-    public List<Node> searchNodes(String query) {
+    public List<GraphNode> searchNodes(String query) {
         return nodeRepository.searchNodes(query);
     }
     
@@ -171,10 +171,10 @@ public class GraphDataService {
             throw new RuntimeException("Target node is required");
         }
         
-        Node source = nodeRepository.findById(relationship.getSource().getId())
+        GraphNode source = nodeRepository.findById(relationship.getSource().getId())
                 .orElseThrow(() -> new RuntimeException("Source node not found with id: " + relationship.getSource().getId()));
         
-        Node target = nodeRepository.findById(relationship.getTarget().getId())
+        GraphNode target = nodeRepository.findById(relationship.getTarget().getId())
                 .orElseThrow(() -> new RuntimeException("Target node not found with id: " + relationship.getTarget().getId()));
         
         relationship.setSource(source);
@@ -200,13 +200,13 @@ public class GraphDataService {
                     }
                     
                     if (relationshipDetails.getSource() != null && relationshipDetails.getSource().getId() != null) {
-                        Node source = nodeRepository.findById(relationshipDetails.getSource().getId())
+                        GraphNode source = nodeRepository.findById(relationshipDetails.getSource().getId())
                                 .orElseThrow(() -> new RuntimeException("Source node not found with id: " + relationshipDetails.getSource().getId()));
                         existingRelationship.setSource(source);
                     }
                     
                     if (relationshipDetails.getTarget() != null && relationshipDetails.getTarget().getId() != null) {
-                        Node target = nodeRepository.findById(relationshipDetails.getTarget().getId())
+                        GraphNode target = nodeRepository.findById(relationshipDetails.getTarget().getId())
                                 .orElseThrow(() -> new RuntimeException("Target node not found with id: " + relationshipDetails.getTarget().getId()));
                         existingRelationship.setTarget(target);
                     }
@@ -269,7 +269,7 @@ public class GraphDataService {
      * @return A map containing nodes and relationships.
      */
     public Map<String, Object> getVisualizationData() {
-        List<Node> nodes = nodeRepository.findAll();
+        List<GraphNode> nodes = nodeRepository.findAll();
         List<Relationship> relationships = relationshipRepository.findAllWithNodes();
         
         Map<String, Object> result = new HashMap<>();
@@ -285,7 +285,7 @@ public class GraphDataService {
      * @return A map containing matching nodes and relationships.
      */
     public Map<String, Object> searchGraph(String query) {
-        List<Node> nodes = nodeRepository.searchNodes(query);
+        List<GraphNode> nodes = nodeRepository.searchNodes(query);
         List<Relationship> relationships = relationshipRepository.searchRelationships(query);
         
         Map<String, Object> result = new HashMap<>();
