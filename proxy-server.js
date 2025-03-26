@@ -20,13 +20,17 @@ const apiProxy = createProxyMiddleware({
 // Use the proxy middleware
 app.use('/api', apiProxy);
 
-// Serve static files from the frontend build directory
-app.use(express.static(path.join(__dirname, 'frontend/build')));
-
-// Always return the main index.html, so client-side routing works
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/build', 'index.html'));
-});
+// Redirect all traffic to the React development server
+app.all('*', createProxyMiddleware({
+  target: 'http://localhost:5000',
+  changeOrigin: true,
+  ws: true,
+  logLevel: 'debug',
+  onError: (err, req, res) => {
+    console.error('Frontend proxy error:', err);
+    res.status(500).send('Proxy error connecting to React app');
+  }
+}));
 
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`Proxy server running at http://0.0.0.0:${PORT}`);
