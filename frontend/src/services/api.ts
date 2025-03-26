@@ -14,13 +14,23 @@ console.log('API Base URL set to:', API_BASE_URL);
 
 // Node operations
 export const getNodes = async (): Promise<NodeType[]> => {
-  const response = await axios.get('/graph/nodes');
-  return response.data;
+  try {
+    const response = await axios.get('/graph/nodes');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching graph data:', error);
+    throw error;
+  }
 };
 
 export const getNodeById = async (id: number): Promise<NodeType> => {
-  const response = await axios.get(`/graph/nodes/${id}`);
-  return response.data;
+  try {
+    const response = await axios.get(`/graph/nodes/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching node with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createNode = async (node: NodeType): Promise<NodeType> => {
@@ -36,43 +46,83 @@ export const createNode = async (node: NodeType): Promise<NodeType> => {
 };
 
 export const updateNode = async (id: number, node: NodeType): Promise<NodeType> => {
-  const response = await axios.put(`/graph/nodes/${id}`, node);
-  return response.data;
+  try {
+    const response = await axios.put(`/graph/nodes/${id}`, node);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating node with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteNode = async (id: number): Promise<void> => {
-  await axios.delete(`/graph/nodes/${id}`);
+  try {
+    await axios.delete(`/graph/nodes/${id}`);
+  } catch (error) {
+    console.error(`Error deleting node with id ${id}:`, error);
+    throw error;
+  }
 };
 
 // Relationship operations
 export const getRelationships = async (): Promise<RelationshipType[]> => {
-  const response = await axios.get('/graph/relationships');
-  return response.data;
+  try {
+    const response = await axios.get('/graph/relationships');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching relationships:', error);
+    throw error;
+  }
 };
 
 export const getRelationshipById = async (id: number): Promise<RelationshipType> => {
-  const response = await axios.get(`/graph/relationships/${id}`);
-  return response.data;
+  try {
+    const response = await axios.get(`/graph/relationships/${id}`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching relationship with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const createRelationship = async (relationship: RelationshipType): Promise<RelationshipType> => {
-  const response = await axios.post('/graph/relationships', relationship);
-  return response.data;
+  try {
+    const response = await axios.post('/graph/relationships', relationship);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating relationship:', error);
+    throw error;
+  }
 };
 
 export const updateRelationship = async (id: number, relationship: RelationshipType): Promise<RelationshipType> => {
-  const response = await axios.put(`/graph/relationships/${id}`, relationship);
-  return response.data;
+  try {
+    const response = await axios.put(`/graph/relationships/${id}`, relationship);
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating relationship with id ${id}:`, error);
+    throw error;
+  }
 };
 
 export const deleteRelationship = async (id: number): Promise<void> => {
-  await axios.delete(`/graph/relationships/${id}`);
+  try {
+    await axios.delete(`/graph/relationships/${id}`);
+  } catch (error) {
+    console.error(`Error deleting relationship with id ${id}:`, error);
+    throw error;
+  }
 };
 
 // Graph visualization
 export const getGraphVisualizationData = async (): Promise<{nodes: NodeType[], relationships: RelationshipType[]}> => {
-  const response = await axios.get('/graph/visualization');
-  return response.data;
+  try {
+    const response = await axios.get('/graph/visualization');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching visualization data:', error);
+    throw error;
+  }
 };
 
 // Graph search
