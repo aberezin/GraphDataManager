@@ -1,3 +1,6 @@
+// This class has been deprecated in favor of using a standalone Neo4j server
+// See the Neo4jConfig class which now handles both development and production environments
+/*
 package com.graphapp.config;
 
 import org.mockito.Mockito;
@@ -26,22 +29,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Mock configuration for Neo4j database (Development).
- * This creates a mocked version of Neo4j driver for lightweight development.
- */
 @Configuration
 @EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
 @EnableTransactionManagement
-@Profile({"default", "dev"})
+@Profile("mock")
 public class MockNeo4jConfig extends AbstractNeo4jConfig {
     
-    /**
-     * Create a mocked Neo4j driver.
-     * This is a lightweight alternative to a real embedded Neo4j server.
-     * 
-     * @return A mocked Neo4j driver.
-     */
     @Bean
     @Override
     public Driver driver() {
@@ -83,3 +76,4 @@ public class MockNeo4jConfig extends AbstractNeo4jConfig {
         return mockDriver;
     }
 }
+*/
