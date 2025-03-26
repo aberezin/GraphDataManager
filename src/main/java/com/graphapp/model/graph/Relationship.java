@@ -1,52 +1,58 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.schema.RelationshipProperties;
-import org.springframework.data.neo4j.core.schema.TargetNode;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
+import org.springframework.data.neo4j.core.schema.*;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
- * Represents a relationship in the graph database
+ * Relationship entity class for Neo4j graph database.
  */
 @RelationshipProperties
 public class Relationship {
 
     @Id
-    @GeneratedValue(UUIDStringGenerator.class)
+    @GeneratedValue
     private Long id;
 
+    @Property("type")
     private String type;
-
-    private Node source;
 
     @TargetNode
     private Node target;
 
-    private Map<String, Object> properties;
+    @DynamicProperties
+    private Map<String, Object> properties = new HashMap<>();
 
+    /**
+     * Default constructor.
+     */
     public Relationship() {
-        // Default constructor required by Neo4j
-        this.properties = new HashMap<>();
     }
 
-    public Relationship(String type, Node source, Node target) {
+    /**
+     * Parameterized constructor.
+     * @param type Type of the relationship
+     * @param target Target node of the relationship
+     */
+    public Relationship(String type, Node target) {
         this.type = type;
-        this.source = source;
         this.target = target;
-        this.properties = new HashMap<>();
     }
 
-    public Relationship(String type, Node source, Node target, Map<String, Object> properties) {
+    /**
+     * Parameterized constructor with properties.
+     * @param type Type of the relationship
+     * @param target Target node of the relationship
+     * @param properties Properties of the relationship
+     */
+    public Relationship(String type, Node target, Map<String, Object> properties) {
         this.type = type;
-        this.source = source;
         this.target = target;
-        this.properties = properties != null ? properties : new HashMap<>();
+        this.properties = properties;
     }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -62,14 +68,6 @@ public class Relationship {
 
     public void setType(String type) {
         this.type = type;
-    }
-
-    public Node getSource() {
-        return source;
-    }
-
-    public void setSource(Node source) {
-        this.source = source;
     }
 
     public Node getTarget() {
@@ -89,55 +87,34 @@ public class Relationship {
     }
 
     /**
-     * Add a property to the relationship
+     * Add a property to this relationship.
+     * @param key The property key
+     * @param value The property value
      */
     public void addProperty(String key, Object value) {
-        if (this.properties == null) {
-            this.properties = new HashMap<>();
-        }
-        this.properties.put(key, value);
+        properties.put(key, value);
     }
 
     /**
-     * Get a property value
-     */
-    public Object getProperty(String key) {
-        if (this.properties == null) {
-            return null;
-        }
-        return this.properties.get(key);
-    }
-
-    /**
-     * Remove a property
+     * Remove a property from this relationship.
+     * @param key The property key
      */
     public void removeProperty(String key) {
-        if (this.properties != null) {
-            this.properties.remove(key);
-        }
+        properties.remove(key);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Relationship that = (Relationship) o;
-        return Objects.equals(id, that.id);
+
+        return id != null ? id.equals(that.id) : that.id == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Relationship{" +
-                "id=" + id +
-                ", type='" + type + '\'' +
-                ", source=" + (source != null ? source.getId() : null) +
-                ", target=" + (target != null ? target.getId() : null) +
-                ", properties=" + properties +
-                '}';
+        return id != null ? id.hashCode() : 0;
     }
 }

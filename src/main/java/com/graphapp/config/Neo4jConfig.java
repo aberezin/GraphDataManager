@@ -7,32 +7,42 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.neo4j.config.AbstractNeo4jConfig;
-import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.data.neo4j.core.transaction.Neo4jTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 /**
- * Neo4j configuration for production environment
- * Uses an external Neo4j instance
+ * Configuration class for Neo4j database.
+ * This configuration is used in production environment.
  */
 @Configuration
-@EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
-@EnableTransactionManagement
 @Profile("!dev")
-public class Neo4jConfig extends AbstractNeo4jConfig {
+public class Neo4jConfig {
 
     @Value("${spring.neo4j.uri:bolt://localhost:7687}")
-    private String neo4jUri;
+    private String uri;
 
     @Value("${spring.neo4j.authentication.username:neo4j}")
-    private String neo4jUsername;
+    private String username;
 
     @Value("${spring.neo4j.authentication.password:password}")
-    private String neo4jPassword;
+    private String password;
 
+    /**
+     * Creates a Neo4j driver bean.
+     * @return A configured Neo4j Driver
+     */
     @Bean
-    @Override
     public Driver driver() {
-        return GraphDatabase.driver(neo4jUri, AuthTokens.basic(neo4jUsername, neo4jPassword));
+        return GraphDatabase.driver(uri, AuthTokens.basic(username, password));
+    }
+
+    /**
+     * Configures the transaction manager for Neo4j.
+     * @param driver The Neo4j driver
+     * @return A configured PlatformTransactionManager
+     */
+    @Bean
+    public PlatformTransactionManager neo4jTransactionManager(Driver driver) {
+        return new Neo4jTransactionManager(driver);
     }
 }

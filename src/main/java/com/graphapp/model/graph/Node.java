@@ -1,50 +1,66 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
-import org.springframework.data.neo4j.core.schema.Id;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
+import org.springframework.data.neo4j.core.schema.*;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Set;
 
 /**
- * Represents a node in the graph database
+ * Node entity class for Neo4j graph database.
  */
-@org.springframework.data.neo4j.core.schema.Node
+@org.springframework.data.neo4j.core.schema.Node("Node")
 public class Node {
 
     @Id
-    @GeneratedValue(UUIDStringGenerator.class)
+    @GeneratedValue
     private Long id;
 
+    @Property("label")
     private String label;
 
+    @Property("type")
     private String type;
 
-    private Map<String, Object> properties;
+    @DynamicProperties
+    private Map<String, Object> properties = new HashMap<>();
 
+    @Relationship(type = "RELATED_TO", direction = Relationship.Direction.OUTGOING)
+    private Set<Relationship> outgoingRelationships = new HashSet<>();
+
+    @Relationship(type = "RELATED_TO", direction = Relationship.Direction.INCOMING)
+    private Set<Relationship> incomingRelationships = new HashSet<>();
+
+    /**
+     * Default constructor.
+     */
     public Node() {
-        // Default constructor required by Neo4j
-        this.properties = new HashMap<>();
     }
 
-    public Node(String type) {
-        this.type = type;
-        this.properties = new HashMap<>();
-    }
-
-    public Node(String type, String label) {
-        this.type = type;
+    /**
+     * Parameterized constructor.
+     * @param label Label of the node
+     * @param type Type of the node
+     */
+    public Node(String label, String type) {
         this.label = label;
-        this.properties = new HashMap<>();
+        this.type = type;
     }
 
-    public Node(String type, String label, Map<String, Object> properties) {
-        this.type = type;
+    /**
+     * Parameterized constructor with properties.
+     * @param label Label of the node
+     * @param type Type of the node
+     * @param properties Properties of the node
+     */
+    public Node(String label, String type, Map<String, Object> properties) {
         this.label = label;
-        this.properties = properties != null ? properties : new HashMap<>();
+        this.type = type;
+        this.properties = properties;
     }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -78,55 +94,67 @@ public class Node {
         this.properties = properties;
     }
 
+    public Set<Relationship> getOutgoingRelationships() {
+        return outgoingRelationships;
+    }
+
+    public void setOutgoingRelationships(Set<Relationship> outgoingRelationships) {
+        this.outgoingRelationships = outgoingRelationships;
+    }
+
+    public Set<Relationship> getIncomingRelationships() {
+        return incomingRelationships;
+    }
+
+    public void setIncomingRelationships(Set<Relationship> incomingRelationships) {
+        this.incomingRelationships = incomingRelationships;
+    }
+
     /**
-     * Add a property to the node
+     * Add a property to this node.
+     * @param key The property key
+     * @param value The property value
      */
     public void addProperty(String key, Object value) {
-        if (this.properties == null) {
-            this.properties = new HashMap<>();
-        }
-        this.properties.put(key, value);
+        properties.put(key, value);
     }
 
     /**
-     * Get a property value
-     */
-    public Object getProperty(String key) {
-        if (this.properties == null) {
-            return null;
-        }
-        return this.properties.get(key);
-    }
-
-    /**
-     * Remove a property
+     * Remove a property from this node.
+     * @param key The property key
      */
     public void removeProperty(String key) {
-        if (this.properties != null) {
-            this.properties.remove(key);
-        }
+        properties.remove(key);
+    }
+
+    /**
+     * Add an outgoing relationship from this node to another node.
+     * @param relationship The relationship to add
+     */
+    public void addOutgoingRelationship(Relationship relationship) {
+        outgoingRelationships.add(relationship);
+    }
+
+    /**
+     * Add an incoming relationship to this node from another node.
+     * @param relationship The relationship to add
+     */
+    public void addIncomingRelationship(Relationship relationship) {
+        incomingRelationships.add(relationship);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Node node = (Node) o;
-        return Objects.equals(id, node.id);
+
+        return id != null ? id.equals(node.id) : node.id == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Node{" +
-                "id=" + id +
-                ", label='" + label + '\'' +
-                ", type='" + type + '\'' +
-                ", properties=" + properties +
-                '}';
+        return id != null ? id.hashCode() : 0;
     }
 }

@@ -2,10 +2,9 @@ package com.graphapp.model.relational;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /**
- * Represents a project in the relational database
+ * Entity class for Project in the relational database.
  */
 @Entity
 @Table(name = "projects")
@@ -18,7 +17,7 @@ public class Project {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
     @Column(name = "created_at", nullable = false)
@@ -31,24 +30,41 @@ public class Project {
     @JoinColumn(name = "user_id")
     private User user;
 
+    /**
+     * Default constructor.
+     */
     public Project() {
-        // Default constructor required by JPA
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Project(String name) {
-        this.name = name;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
+    /**
+     * Parameterized constructor.
+     * @param name Name of the project
+     * @param description Description of the project
+     */
     public Project(String name, String description) {
         this.name = name;
         this.description = description;
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
+
+    /**
+     * Parameterized constructor with user.
+     * @param name Name of the project
+     * @param description Description of the project
+     * @param user Owner of the project
+     */
+    public Project(String name, String description, User user) {
+        this.name = name;
+        this.description = description;
+        this.user = user;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    // Getters and Setters
 
     public Long getId() {
         return id;
@@ -98,8 +114,11 @@ public class Project {
         this.user = user;
     }
 
+    /**
+     * Updates the updatedAt timestamp to the current time.
+     */
     @PreUpdate
-    protected void onUpdate() {
+    public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 
@@ -107,24 +126,14 @@ public class Project {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
+
         Project project = (Project) o;
-        return Objects.equals(id, project.id);
+
+        return id != null ? id.equals(project.id) : project.id == null;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
-    }
-
-    @Override
-    public String toString() {
-        return "Project{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", createdAt=" + createdAt +
-                ", updatedAt=" + updatedAt +
-                ", userId=" + (user != null ? user.getId() : null) +
-                '}';
+        return id != null ? id.hashCode() : 0;
     }
 }

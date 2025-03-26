@@ -1,43 +1,59 @@
 package com.graphapp.config;
 
 import org.neo4j.driver.Driver;
-import org.neo4j.driver.internal.InternalDriver;
-import org.neo4j.driver.internal.logging.DevNullLogging;
 import org.neo4j.harness.Neo4j;
 import org.neo4j.harness.Neo4jBuilders;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.neo4j.config.AbstractNeo4jConfig;
-import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.data.neo4j.core.transaction.Neo4jTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import static org.neo4j.driver.GraphDatabase.driver;
 
 /**
- * Neo4j configuration for development environment
- * Uses embedded Neo4j for testing and development
+ * Configuration class for Neo4j database in development mode.
+ * This configuration uses an embedded Neo4j instance for development and testing.
  */
 @Configuration
-@EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
-@EnableTransactionManagement
 @Profile("dev")
-public class MockNeo4jConfig extends AbstractNeo4jConfig {
+public class MockNeo4jConfig {
 
     /**
-     * Embedded Neo4j instance for development
+     * Creates an embedded Neo4j server for development and testing.
+     * @return A Neo4j instance
      */
     @Bean(destroyMethod = "close")
-    public Neo4j embeddedDatabaseServer() {
+    public Neo4j neo4j() {
         return Neo4jBuilders.newInProcessBuilder()
-                .withDisabledServer() // No need for HTTP server in embedded mode
+                .withDisabledServer()
+                .withFixture(
+                        "CREATE (n:Person:Node {name: 'Alice', age: 30})-[:KNOWS]->(m:Person:Node {name: 'Bob', age: 25})," +
+                        "(n)-[:WORKS_WITH]->(o:Person:Node {name: 'Charlie', age: 35})," +
+                        "(m)-[:LIVES_IN]->(p:City:Node {name: 'New York', population: 8000000})," +
+                        "(o)-[:LIVES_IN]->(q:City:Node {name: 'San Francisco', population: 900000})," +
+                        "(p)-[:LOCATED_IN]->(r:Country:Node {name: 'USA', code: 'US'})," +
+                        "(q)-[:LOCATED_IN]->(r)")
                 .build();
     }
 
     /**
-     * Driver for the embedded database
+     * Creates a Neo4j driver bean using the embedded Neo4j server.
+     * @param neo4j The embedded Neo4j server
+     * @return A configured Neo4j Driver
      */
     @Bean
-    @Override
-    public Driver driver() {
-        return embeddedDatabaseServer().driver();
+    public Driver driver(Neo4j neo4j) {
+        return driver(neo4j.boltURI());
+    }
+
+    /**
+     * Configures the transaction manager for Neo4j.
+     * @param driver The Neo4j driver
+     * @return A configured PlatformTransactionManager
+     */
+    @Bean
+    public PlatformTransactionManager neo4jTransactionManager(Driver driver) {
+        return new Neo4jTransactionManager(driver);
     }
 }
