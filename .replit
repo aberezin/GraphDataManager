@@ -1,0 +1,38 @@
+modules = ["java", "nodejs-20"]
+
+[nix]
+channel = "stable-24_05"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Frontend App"
+
+[[workflows.workflow]]
+name = "Frontend App"
+author = "agent"
+
+[workflows.workflow.metadata]
+agentRequireRestartOnSave = false
+
+[[workflows.workflow.tasks]]
+task = "packager.installForAll"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd frontend && HOST=0.0.0.0 PORT=5000 npx react-scripts start"
+waitForPort = 5000
+
+[deployment]
+run = ["sh", "-c", "cd frontend && npm install && npm run dev"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
