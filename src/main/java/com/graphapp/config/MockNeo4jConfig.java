@@ -20,21 +20,14 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 public class MockNeo4jConfig extends AbstractNeo4jConfig {
     
     /**
-     * Configure the Neo4j driver for development with embedded database.
+     * Configure the Neo4j driver for development with in-memory database.
      * 
      * @return The Neo4j driver.
      */
     @Bean
     @Override
     public Driver driver() {
-        try {
-            // Connect to Neo4j server if available
-            return GraphDatabase.driver("bolt://localhost:7687", AuthTokens.basic("neo4j", "password"));
-        } catch (Exception e) {
-            // If we can't connect to Neo4j, return a mock driver that doesn't actually connect to anything
-            // This is for development mode only - you would need a real Neo4j instance in production
-            System.out.println("Warning: Using mock Neo4j driver. Graph database operations will not work properly.");
-            return GraphDatabase.driver("bolt://localhost:7687", AuthTokens.none());
-        }
+        // Use an in-memory database (impermanent) for development
+        return GraphDatabase.driver("bolt://localhost:7687", AuthTokens.none());
     }
 }
