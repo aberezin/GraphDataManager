@@ -1,4 +1,8 @@
--- Users table
+-- Drop tables if they exist
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS users;
+
+-- Create tables
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -7,27 +11,26 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(50)
 );
 
--- Projects table
 CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
     created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL,
     user_id INTEGER,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- Insert sample data for development
-INSERT OR IGNORE INTO users (id, username, email, first_name, last_name)
+-- Insert sample data
+INSERT INTO users (username, email, first_name, last_name)
 VALUES 
-    (1, 'johndoe', 'john.doe@example.com', 'John', 'Doe'),
-    (2, 'janedoe', 'jane.doe@example.com', 'Jane', 'Doe'),
-    (3, 'bobsmith', 'bob.smith@example.com', 'Bob', 'Smith');
+    ('johndoe', 'john.doe@example.com', 'John', 'Doe'),
+    ('janesmith', 'jane.smith@example.com', 'Jane', 'Smith'),
+    ('bobwilson', 'bob.wilson@example.com', 'Bob', 'Wilson');
 
-INSERT OR IGNORE INTO projects (id, name, description, created_at, updated_at, user_id)
+INSERT INTO projects (name, description, created_at, updated_at, user_id)
 VALUES 
-    (1, 'Project Alpha', 'A sample project for demonstration', datetime('now', '-10 days'), datetime('now', '-1 day'), 1),
-    (2, 'Project Beta', 'Another sample project for testing', datetime('now', '-5 days'), datetime('now'), 1),
-    (3, 'Data Analysis Project', 'Analyze and visualize data using Neo4j', datetime('now', '-20 days'), datetime('now', '-15 days'), 2),
-    (4, 'Graph Visualization', 'Project for creating interactive graph visualizations', datetime('now', '-2 days'), datetime('now'), 3);
+    ('Graph Analysis Tool', 'A tool for visualizing and analyzing graph data structures', DATETIME('now', '-30 days'), DATETIME('now', '-5 days'), 1),
+    ('Data Integration Platform', 'Platform for integrating relational and graph data sources', DATETIME('now', '-60 days'), DATETIME('now', '-2 days'), 1),
+    ('Knowledge Graph Builder', 'Tool to create and maintain knowledge graphs from structured data', DATETIME('now', '-15 days'), DATETIME('now'), 2),
+    ('Network Visualization', 'Interactive visualization of network relationships', DATETIME('now', '-45 days'), DATETIME('now', '-10 days'), 3);

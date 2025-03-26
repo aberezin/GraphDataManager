@@ -8,17 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
 public class RelationalDataService {
-
+    
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
-
+    
     @Autowired
     public RelationalDataService(UserRepository userRepository, ProjectRepository projectRepository) {
         this.userRepository = userRepository;
@@ -26,133 +25,173 @@ public class RelationalDataService {
     }
     
     // User operations
-    @Transactional(readOnly = true)
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
     
-    @Transactional(readOnly = true)
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
     
-    @Transactional(readOnly = true)
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }
     
-    @Transactional(readOnly = true)
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
     
     @Transactional
     public User createUser(User user) {
+        // Validation logic
+        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty");
+        }
+        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+        
+        // Check for duplicate username or email
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already exists");
+            throw new IllegalArgumentException("Username already exists: " + user.getUsername());
         }
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new IllegalArgumentException("Email already exists: " + user.getEmail());
         }
+        
         return userRepository.save(user);
     }
     
     @Transactional
-    public User updateUser(Long id, User userDetails) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User existingUser = optionalUser.get();
-            
-            // Check if username is being changed and if it's already taken
-            if (!existingUser.getUsername().equals(userDetails.getUsername()) && 
-                userRepository.existsByUsername(userDetails.getUsername())) {
-                throw new RuntimeException("Username already exists");
-            }
-            
-            // Check if email is being changed and if it's already taken
-            if (!existingUser.getEmail().equals(userDetails.getEmail()) && 
-                userRepository.existsByEmail(userDetails.getEmail())) {
-                throw new RuntimeException("Email already exists");
-            }
-            
-            existingUser.setUsername(userDetails.getUsername());
-            existingUser.setEmail(userDetails.getEmail());
-            existingUser.setFirstName(userDetails.getFirstName());
-            existingUser.setLastName(userDetails.getLastName());
-            
-            return userRepository.save(existingUser);
-        } else {
-            throw new RuntimeException("User not found with id: " + id);
-        }
+    public Optional<User> updateUser(Long id, User userDetails) {
+        return userRepository.findById(id)
+                .map(existingUser -> {
+                    // Update only provided fields
+                    if (userDetails.getUsername() != null 
+                            && !userDetails.getUsername().equals(existingUser.getUsername())) {
+                        if (userRepository.existsByUsername(userDetails.getUsername())) {
+                            throw new IllegalArgumentException("Username already exists: " + userDetails.getUsername());
+                        }
+                        existingUser.setUsername(userDetails.getUsername());
+                    }
+                    
+                    if (userDetails.getEmail() != null 
+                            && !userDetails.getEmail().equals(existingUser.getEmail())) {
+                        if (userRepository.existsByEmail(userDetails.getEmail())) {
+                            throw new IllegalArgumentException("Email already exists: " + userDetails.getEmail());
+                        }
+                        existingUser.setEmail(userDetails.getEmail());
+                    }
+                    
+                    if (userDetails.getFirstName() != null) {
+                        existingUser.setFirstName(userDetails.getFirstName());
+                    }
+                    
+                    if (userDetails.getLastName() != null) {
+                        existingUser.setLastName(userDetails.getLastName());
+                    }
+                    
+                    return userRepository.save(existingUser);
+                });
     }
     
     @Transactional
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public boolean deleteUser(Long id) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    userRepository.delete(user);
+                    return true;
+                })
+                .orElse(false);
     }
     
-    @Transactional(readOnly = true)
     public List<User> searchUsers(String query) {
         return userRepository.searchUsers(query);
     }
     
     // Project operations
-    @Transactional(readOnly = true)
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
     }
     
-    @Transactional(readOnly = true)
     public Optional<Project> getProjectById(Long id) {
         return projectRepository.findById(id);
     }
     
-    @Transactional(readOnly = true)
     public List<Project> getProjectsByUserId(Long userId) {
+        // Validate user exists
+        if (!userRepository.existsById(userId)) {
+            throw new IllegalArgumentException("User not found: " + userId);
+        }
         return projectRepository.findByUserId(userId);
     }
     
     @Transactional
     public Project createProject(Project project) {
+        // Validation logic
+        if (project.getName() == null || project.getName().trim().isEmpty()) {
+            throw new IllegalArgumentException("Project name cannot be empty");
+        }
+        
+        // Validate user exists if provided
+        if (project.getUser() != null && project.getUser().getId() != null) {
+            Long userId = project.getUser().getId();
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+            project.setUser(user);
+        }
+        
+        // Set timestamps
+        LocalDateTime now = LocalDateTime.now();
+        project.setCreatedAt(now);
+        project.setUpdatedAt(now);
+        
         return projectRepository.save(project);
     }
     
     @Transactional
-    public Project updateProject(Long id, Project projectDetails) {
-        Optional<Project> optionalProject = projectRepository.findById(id);
-        if (optionalProject.isPresent()) {
-            Project existingProject = optionalProject.get();
-            existingProject.setName(projectDetails.getName());
-            existingProject.setDescription(projectDetails.getDescription());
-            existingProject.setUser(projectDetails.getUser());
-            return projectRepository.save(existingProject);
-        } else {
-            throw new RuntimeException("Project not found with id: " + id);
-        }
+    public Optional<Project> updateProject(Long id, Project projectDetails) {
+        return projectRepository.findById(id)
+                .map(existingProject -> {
+                    // Update only provided fields
+                    if (projectDetails.getName() != null) {
+                        existingProject.setName(projectDetails.getName());
+                    }
+                    
+                    if (projectDetails.getDescription() != null) {
+                        existingProject.setDescription(projectDetails.getDescription());
+                    }
+                    
+                    // Update user if provided
+                    if (projectDetails.getUser() != null && projectDetails.getUser().getId() != null) {
+                        Long userId = projectDetails.getUser().getId();
+                        User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                        existingProject.setUser(user);
+                    }
+                    
+                    // Update timestamp
+                    existingProject.setUpdatedAt(LocalDateTime.now());
+                    
+                    return projectRepository.save(existingProject);
+                });
     }
     
     @Transactional
-    public void deleteProject(Long id) {
-        projectRepository.deleteById(id);
+    public boolean deleteProject(Long id) {
+        return projectRepository.findById(id)
+                .map(project -> {
+                    projectRepository.delete(project);
+                    return true;
+                })
+                .orElse(false);
     }
     
-    @Transactional(readOnly = true)
     public List<Project> searchProjects(String query) {
         return projectRepository.searchProjects(query);
     }
     
-    @Transactional(readOnly = true)
     public List<Project> getRecentProjects() {
         return projectRepository.findRecentProjects();
-    }
-    
-    @Transactional(readOnly = true)
-    public Map<String, Object> getRelationalStats() {
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("userCount", userRepository.count());
-        stats.put("projectCount", projectRepository.count());
-        stats.put("recentProjects", projectRepository.findRecentProjects().subList(0, 
-            Math.min(5, projectRepository.findRecentProjects().size())));
-        return stats;
     }
 }

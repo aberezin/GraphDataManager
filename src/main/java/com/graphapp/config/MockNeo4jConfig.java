@@ -4,325 +4,191 @@ import com.graphapp.model.graph.Node;
 import com.graphapp.model.graph.Relationship;
 import com.graphapp.repository.graph.NodeRepository;
 import com.graphapp.repository.graph.RelationshipRepository;
-import org.neo4j.driver.Driver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.neo4j.core.DatabaseSelectionProvider;
-import org.springframework.data.neo4j.core.Neo4jClient;
-import org.springframework.data.neo4j.core.Neo4jTemplate;
-import org.springframework.data.neo4j.core.transaction.Neo4jTransactionManager;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
-@EnableTransactionManagement
 @Profile("dev")
 public class MockNeo4jConfig {
-
+    
+    // Mock implementation of NodeRepository for development
     @Bean
     @Primary
-    public NodeRepository mockNodeRepository() {
+    public NodeRepository nodeRepository() {
         return new MockNodeRepository();
     }
-
+    
+    // Mock implementation of RelationshipRepository for development
     @Bean
     @Primary
-    public RelationshipRepository mockRelationshipRepository() {
+    public RelationshipRepository relationshipRepository() {
         return new MockRelationshipRepository();
     }
-
-    // Mock implementation of NodeRepository
-    public static class MockNodeRepository implements NodeRepository {
+    
+    // In-memory implementation of NodeRepository
+    private static class MockNodeRepository implements NodeRepository {
         private final Map<String, Node> nodes = new HashMap<>();
         private int idCounter = 1;
-
+        
         public MockNodeRepository() {
-            // Initialize with some sample data
-            createSampleNodes();
-        }
-
-        private void createSampleNodes() {
-            // Create sample nodes for development testing
-            Node person1 = new Node("John Doe", "Person");
-            person1.addProperty("age", 30);
-            person1.addProperty("occupation", "Software Engineer");
+            // Initialize with some sample nodes
+            Node person1 = new Node("Person");
+            person1.setLabel("John Smith");
+            Map<String, Object> props1 = new HashMap<>();
+            props1.put("age", 32);
+            props1.put("occupation", "Developer");
+            person1.setProperties(props1);
+            
+            Node person2 = new Node("Person");
+            person2.setLabel("Jane Doe");
+            Map<String, Object> props2 = new HashMap<>();
+            props2.put("age", 28);
+            props2.put("occupation", "Designer");
+            person2.setProperties(props2);
+            
+            Node company = new Node("Organization");
+            company.setLabel("ACME Corp");
+            Map<String, Object> props3 = new HashMap<>();
+            props3.put("founded", 1985);
+            props3.put("industry", "Technology");
+            company.setProperties(props3);
+            
+            Node project = new Node("Project");
+            project.setLabel("Graph Database App");
+            Map<String, Object> props4 = new HashMap<>();
+            props4.put("startDate", "2023-01-15");
+            props4.put("priority", "High");
+            project.setProperties(props4);
+            
             save(person1);
-
-            Node person2 = new Node("Jane Smith", "Person");
-            person2.addProperty("age", 28);
-            person2.addProperty("occupation", "Data Scientist");
             save(person2);
-
-            Node company1 = new Node("Acme Corp", "Company");
-            company1.addProperty("industry", "Technology");
-            company1.addProperty("founded", 2010);
-            save(company1);
-
-            Node project1 = new Node("Graph Database Project", "Project");
-            project1.addProperty("status", "In Progress");
-            project1.addProperty("priority", "High");
-            save(project1);
+            save(company);
+            save(project);
         }
-
-        @Override
-        public List<Node> findByType(String type) {
-            List<Node> result = new ArrayList<>();
-            for (Node node : nodes.values()) {
-                if (node.getType() != null && node.getType().equals(type)) {
-                    result.add(node);
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public List<Node> findByLabel(String label) {
-            List<Node> result = new ArrayList<>();
-            for (Node node : nodes.values()) {
-                if (node.getLabel() != null && node.getLabel().equals(label)) {
-                    result.add(node);
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public List<Node> searchNodes(String searchTerm) {
-            List<Node> result = new ArrayList<>();
-            for (Node node : nodes.values()) {
-                if ((node.getLabel() != null && node.getLabel().contains(searchTerm)) ||
-                    (node.getType() != null && node.getType().contains(searchTerm))) {
-                    result.add(node);
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public List<Node> findNodesWithRelationships() {
-            // In a mock implementation, we'll just return all nodes
-            return findAll();
-        }
-
-        @Override
-        public <S extends Node> S save(S entity) {
-            if (entity.getId() == null) {
-                entity.setId(String.valueOf(idCounter++));
-            }
-            nodes.put(entity.getId(), entity);
-            return entity;
-        }
-
-        @Override
-        public <S extends Node> List<S> saveAll(Iterable<S> entities) {
-            List<S> result = new ArrayList<>();
-            for (S entity : entities) {
-                result.add(save(entity));
-            }
-            return result;
-        }
-
-        @Override
-        public Optional<Node> findById(String id) {
-            return Optional.ofNullable(nodes.get(id));
-        }
-
-        @Override
-        public boolean existsById(String id) {
-            return nodes.containsKey(id);
-        }
-
+        
         @Override
         public List<Node> findAll() {
             return new ArrayList<>(nodes.values());
         }
-
+        
         @Override
-        public Iterable<Node> findAllById(Iterable<String> ids) {
-            List<Node> result = new ArrayList<>();
-            for (String id : ids) {
-                Node node = nodes.get(id);
-                if (node != null) {
-                    result.add(node);
-                }
+        public Optional<Node> findById(String id) {
+            return Optional.ofNullable(nodes.get(id));
+        }
+        
+        @Override
+        public Node save(Node node) {
+            if (node.getId() == null) {
+                node.setId(String.valueOf(idCounter++));
             }
-            return result;
+            nodes.put(node.getId(), node);
+            return node;
         }
-
+        
         @Override
-        public long count() {
-            return nodes.size();
-        }
-
-        @Override
-        public void deleteById(String id) {
-            nodes.remove(id);
-        }
-
-        @Override
-        public void delete(Node entity) {
-            if (entity.getId() != null) {
-                nodes.remove(entity.getId());
+        public void delete(Node node) {
+            if (node.getId() != null) {
+                nodes.remove(node.getId());
             }
         }
-
-        @Override
-        public void deleteAllById(Iterable<? extends String> ids) {
-            for (String id : ids) {
-                nodes.remove(id);
-            }
-        }
-
-        @Override
-        public void deleteAll(Iterable<? extends Node> entities) {
-            for (Node entity : entities) {
-                delete(entity);
-            }
-        }
-
-        @Override
-        public void deleteAll() {
-            nodes.clear();
-        }
-    }
-
-    // Mock implementation of RelationshipRepository
-    public static class MockRelationshipRepository implements RelationshipRepository {
-        private final Map<String, Relationship> relationships = new HashMap<>();
-        private int idCounter = 1;
-
-        public MockRelationshipRepository() {
-            // We'll add sample relationships after nodes are created
-        }
-
-        @Override
-        public List<Relationship> findByType(String type) {
-            List<Relationship> result = new ArrayList<>();
-            for (Relationship relationship : relationships.values()) {
-                if (relationship.getType() != null && relationship.getType().equals(type)) {
-                    result.add(relationship);
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public List<Relationship> searchRelationships(String searchTerm) {
-            List<Relationship> result = new ArrayList<>();
-            for (Relationship relationship : relationships.values()) {
-                if (relationship.getType() != null && relationship.getType().contains(searchTerm)) {
-                    result.add(relationship);
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public List<Relationship> findAllRelationshipsWithNodes() {
-            return findAll();
-        }
-
-        @Override
-        public List<Relationship> findRelationshipsBetweenNodes(String sourceId, String targetId) {
-            List<Relationship> result = new ArrayList<>();
-            for (Relationship relationship : relationships.values()) {
-                if (relationship.getSource() != null && relationship.getTarget() != null &&
-                    relationship.getSource().getId().equals(sourceId) &&
-                    relationship.getTarget().getId().equals(targetId)) {
-                    result.add(relationship);
-                }
-            }
-            return result;
-        }
-
-        @Override
-        public <S extends Relationship> S save(S entity) {
-            if (entity.getId() == null) {
-                entity.setId(String.valueOf(idCounter++));
-            }
-            relationships.put(entity.getId(), entity);
-            return entity;
-        }
-
-        @Override
-        public <S extends Relationship> List<S> saveAll(Iterable<S> entities) {
-            List<S> result = new ArrayList<>();
-            for (S entity : entities) {
-                result.add(save(entity));
-            }
-            return result;
-        }
-
-        @Override
-        public Optional<Relationship> findById(String id) {
-            return Optional.ofNullable(relationships.get(id));
-        }
-
+        
         @Override
         public boolean existsById(String id) {
-            return relationships.containsKey(id);
+            return nodes.containsKey(id);
         }
-
+        
+        @Override
+        public List<Node> findByType(String type) {
+            return nodes.values().stream()
+                    .filter(node -> type.equals(node.getType()))
+                    .collect(Collectors.toList());
+        }
+        
+        @Override
+        public List<Node> findByLabel(String label) {
+            return nodes.values().stream()
+                    .filter(node -> label.equals(node.getLabel()))
+                    .collect(Collectors.toList());
+        }
+        
+        @Override
+        public List<Node> searchNodes(String query) {
+            String lowerQuery = query.toLowerCase();
+            return nodes.values().stream()
+                    .filter(node -> (node.getLabel() != null && node.getLabel().toLowerCase().contains(lowerQuery)) ||
+                            (node.getType() != null && node.getType().toLowerCase().contains(lowerQuery)) ||
+                            (node.getProperties() != null && node.getProperties().values().stream()
+                                    .anyMatch(value -> value != null && value.toString().toLowerCase().contains(lowerQuery))))
+                    .collect(Collectors.toList());
+        }
+    }
+    
+    // In-memory implementation of RelationshipRepository
+    private static class MockRelationshipRepository implements RelationshipRepository {
+        private final Map<String, Relationship> relationships = new HashMap<>();
+        private int idCounter = 1;
+        
+        public MockRelationshipRepository() {
+            // Sample relationships will be created after nodes are loaded
+        }
+        
         @Override
         public List<Relationship> findAll() {
             return new ArrayList<>(relationships.values());
         }
-
+        
         @Override
-        public Iterable<Relationship> findAllById(Iterable<String> ids) {
-            List<Relationship> result = new ArrayList<>();
-            for (String id : ids) {
-                Relationship relationship = relationships.get(id);
-                if (relationship != null) {
-                    result.add(relationship);
-                }
+        public Optional<Relationship> findById(String id) {
+            return Optional.ofNullable(relationships.get(id));
+        }
+        
+        @Override
+        public Relationship save(Relationship relationship) {
+            if (relationship.getId() == null) {
+                relationship.setId(String.valueOf(idCounter++));
             }
-            return result;
+            relationships.put(relationship.getId(), relationship);
+            return relationship;
         }
-
+        
         @Override
-        public long count() {
-            return relationships.size();
-        }
-
-        @Override
-        public void deleteById(String id) {
-            relationships.remove(id);
-        }
-
-        @Override
-        public void delete(Relationship entity) {
-            if (entity.getId() != null) {
-                relationships.remove(entity.getId());
+        public void delete(Relationship relationship) {
+            if (relationship.getId() != null) {
+                relationships.remove(relationship.getId());
             }
         }
-
+        
         @Override
-        public void deleteAllById(Iterable<? extends String> ids) {
-            for (String id : ids) {
-                relationships.remove(id);
-            }
+        public List<Relationship> findByType(String type) {
+            return relationships.values().stream()
+                    .filter(rel -> type.equals(rel.getType()))
+                    .collect(Collectors.toList());
         }
-
+        
         @Override
-        public void deleteAll(Iterable<? extends Relationship> entities) {
-            for (Relationship entity : entities) {
-                delete(entity);
-            }
+        public List<Relationship> findAllRelationshipsWithNodes() {
+            return new ArrayList<>(relationships.values());
         }
-
+        
         @Override
-        public void deleteAll() {
-            relationships.clear();
+        public List<Relationship> searchRelationships(String query) {
+            String lowerQuery = query.toLowerCase();
+            return relationships.values().stream()
+                    .filter(rel -> (rel.getType() != null && rel.getType().toLowerCase().contains(lowerQuery)) ||
+                            (rel.getProperties() != null && rel.getProperties().values().stream()
+                                    .anyMatch(value -> value != null && value.toString().toLowerCase().contains(lowerQuery))) ||
+                            (rel.getSource() != null && rel.getSource().getLabel() != null && 
+                                    rel.getSource().getLabel().toLowerCase().contains(lowerQuery)) ||
+                            (rel.getTarget() != null && rel.getTarget().getLabel() != null && 
+                                    rel.getTarget().getLabel().toLowerCase().contains(lowerQuery)))
+                    .collect(Collectors.toList());
         }
     }
 }
