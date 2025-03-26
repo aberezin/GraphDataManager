@@ -1,252 +1,279 @@
 package com.graphapp.service;
 
-import com.graphapp.model.graph.Node;
-import com.graphapp.model.graph.Relationship;
-import com.graphapp.repository.graph.NodeRepository;
-import com.graphapp.repository.graph.RelationshipRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.graphapp.model.graph.Node;
+import com.graphapp.model.graph.Relationship;
+import com.graphapp.repository.graph.NodeRepository;
+import com.graphapp.repository.graph.RelationshipRepository;
+
 /**
- * Service class for operations related to graph data.
+ * Service for managing graph data (nodes and relationships).
  */
 @Service
 public class GraphDataService {
-
+    
     private final NodeRepository nodeRepository;
     private final RelationshipRepository relationshipRepository;
-
+    
     @Autowired
     public GraphDataService(NodeRepository nodeRepository, RelationshipRepository relationshipRepository) {
         this.nodeRepository = nodeRepository;
         this.relationshipRepository = relationshipRepository;
     }
-
+    
+    // Node operations
+    
     /**
      * Get all nodes.
-     * @return List of all nodes
+     * 
+     * @return A list of all nodes.
      */
     public List<Node> getAllNodes() {
         return nodeRepository.findAll();
     }
-
+    
     /**
      * Get a node by ID.
-     * @param id ID of the node to find
-     * @return Optional containing the node if found
+     * 
+     * @param id The ID of the node.
+     * @return The node, or null if not found.
      */
-    public Optional<Node> getNodeById(Long id) {
-        return nodeRepository.findById(id);
+    public Node getNodeById(String id) {
+        return nodeRepository.findById(id).orElse(null);
     }
-
+    
     /**
      * Create a new node.
-     * @param node Node to create
-     * @return The created node
+     * 
+     * @param node The node to create.
+     * @return The created node.
      */
     @Transactional
     public Node createNode(Node node) {
-        validateNode(node);
+        if (node.getLabel() == null || node.getLabel().trim().isEmpty()) {
+            throw new IllegalArgumentException("Node label cannot be empty");
+        }
         return nodeRepository.save(node);
     }
-
+    
     /**
      * Update an existing node.
-     * @param id ID of the node to update
-     * @param nodeDetails Updated node details
-     * @return The updated node
-     * @throws RuntimeException if the node does not exist
+     * 
+     * @param id The ID of the node to update.
+     * @param nodeDetails The updated node details.
+     * @return The updated node, or null if not found.
      */
     @Transactional
-    public Node updateNode(Long id, Node nodeDetails) {
-        Node node = nodeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Node not found with id: " + id));
-
-        validateNode(nodeDetails);
-        
-        node.setLabel(nodeDetails.getLabel());
-        node.setType(nodeDetails.getType());
-        node.setProperties(nodeDetails.getProperties());
-        
-        return nodeRepository.save(node);
+    public Node updateNode(String id, Node nodeDetails) {
+        Optional<Node> optionalNode = nodeRepository.findById(id);
+        if (optionalNode.isPresent()) {
+            Node node = optionalNode.get();
+            
+            if (nodeDetails.getLabel() != null) {
+                node.setLabel(nodeDetails.getLabel());
+            }
+            
+            if (nodeDetails.getType() != null) {
+                node.setType(nodeDetails.getType());
+            }
+            
+            if (nodeDetails.getProperties() != null) {
+                node.setProperties(nodeDetails.getProperties());
+            }
+            
+            return nodeRepository.save(node);
+        }
+        return null;
     }
-
+    
     /**
      * Delete a node by ID.
-     * @param id ID of the node to delete
-     * @throws RuntimeException if the node does not exist
+     * 
+     * @param id The ID of the node to delete.
+     * @return True if the node was deleted, false otherwise.
      */
     @Transactional
-    public void deleteNode(Long id) {
-        Node node = nodeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Node not found with id: " + id));
-        
-        // Find and delete all relationships associated with this node
-        List<Relationship> sourceRelationships = relationshipRepository.findBySourceNodeId(id);
-        List<Relationship> targetRelationships = relationshipRepository.findByTargetNodeId(id);
-        
-        relationshipRepository.deleteAll(sourceRelationships);
-        relationshipRepository.deleteAll(targetRelationships);
-        
-        nodeRepository.delete(node);
+    public boolean deleteNode(String id) {
+        if (nodeRepository.existsById(id)) {
+            nodeRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
-
+    
     /**
-     * Search nodes by a query string.
-     * @param query Query string to search for
-     * @return List of nodes matching the search query
+     * Search for nodes by label or type.
+     * 
+     * @param searchText The text to search for.
+     * @return A list of nodes matching the search criteria.
      */
-    public List<Node> searchNodes(String query) {
-        return nodeRepository.searchNodes(query);
+    public List<Node> searchNodes(String searchText) {
+        return nodeRepository.findByLabelContainingIgnoreCaseOrTypeContainingIgnoreCase(searchText, searchText);
     }
-
+    
+    /**
+     * Find nodes by type.
+     * 
+     * @param type The type of nodes to find.
+     * @return A list of nodes with the specified type.
+     */
+    public List<Node> findNodesByType(String type) {
+        return nodeRepository.findByType(type);
+    }
+    
+    // Relationship operations
+    
     /**
      * Get all relationships.
-     * @return List of all relationships
+     * 
+     * @return A list of all relationships.
      */
     public List<Relationship> getAllRelationships() {
         return relationshipRepository.findAll();
     }
-
+    
     /**
      * Get a relationship by ID.
-     * @param id ID of the relationship to find
-     * @return Optional containing the relationship if found
+     * 
+     * @param id The ID of the relationship.
+     * @return The relationship, or null if not found.
      */
-    public Optional<Relationship> getRelationshipById(Long id) {
-        return relationshipRepository.findById(id);
+    public Relationship getRelationshipById(String id) {
+        return relationshipRepository.findById(id).orElse(null);
     }
-
+    
     /**
      * Create a new relationship.
-     * @param relationship Relationship to create
-     * @return The created relationship
-     * @throws RuntimeException if the source or target node does not exist
+     * 
+     * @param relationship The relationship to create.
+     * @return The created relationship.
      */
     @Transactional
     public Relationship createRelationship(Relationship relationship) {
-        validateRelationship(relationship);
+        if (relationship.getType() == null || relationship.getType().trim().isEmpty()) {
+            throw new IllegalArgumentException("Relationship type cannot be empty");
+        }
+        
+        if (relationship.getSource() == null || relationship.getSource().getId() == null) {
+            throw new IllegalArgumentException("Source node cannot be null");
+        }
+        
+        if (relationship.getTarget() == null || relationship.getTarget().getId() == null) {
+            throw new IllegalArgumentException("Target node cannot be null");
+        }
         
         // Ensure source and target nodes exist
         Node source = nodeRepository.findById(relationship.getSource().getId())
-                .orElseThrow(() -> new RuntimeException("Source node not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Source node not found"));
         
         Node target = nodeRepository.findById(relationship.getTarget().getId())
-                .orElseThrow(() -> new RuntimeException("Target node not found"));
+                .orElseThrow(() -> new IllegalArgumentException("Target node not found"));
         
         relationship.setSource(source);
         relationship.setTarget(target);
         
         return relationshipRepository.save(relationship);
     }
-
+    
     /**
      * Update an existing relationship.
-     * @param id ID of the relationship to update
-     * @param relationshipDetails Updated relationship details
-     * @return The updated relationship
-     * @throws RuntimeException if the relationship, source node, or target node does not exist
+     * 
+     * @param id The ID of the relationship to update.
+     * @param relationshipDetails The updated relationship details.
+     * @return The updated relationship, or null if not found.
      */
     @Transactional
-    public Relationship updateRelationship(Long id, Relationship relationshipDetails) {
-        Relationship relationship = relationshipRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Relationship not found with id: " + id));
-        
-        validateRelationship(relationshipDetails);
-        
-        // Ensure source and target nodes exist if they are being updated
-        if (relationshipDetails.getSource() != null && relationshipDetails.getSource().getId() != null) {
-            Node source = nodeRepository.findById(relationshipDetails.getSource().getId())
-                    .orElseThrow(() -> new RuntimeException("Source node not found"));
-            relationship.setSource(source);
+    public Relationship updateRelationship(String id, Relationship relationshipDetails) {
+        Optional<Relationship> optionalRelationship = relationshipRepository.findById(id);
+        if (optionalRelationship.isPresent()) {
+            Relationship relationship = optionalRelationship.get();
+            
+            if (relationshipDetails.getType() != null) {
+                relationship.setType(relationshipDetails.getType());
+            }
+            
+            if (relationshipDetails.getProperties() != null) {
+                relationship.setProperties(relationshipDetails.getProperties());
+            }
+            
+            return relationshipRepository.save(relationship);
         }
-        
-        if (relationshipDetails.getTarget() != null && relationshipDetails.getTarget().getId() != null) {
-            Node target = nodeRepository.findById(relationshipDetails.getTarget().getId())
-                    .orElseThrow(() -> new RuntimeException("Target node not found"));
-            relationship.setTarget(target);
-        }
-        
-        relationship.setType(relationshipDetails.getType());
-        relationship.setProperties(relationshipDetails.getProperties());
-        
-        return relationshipRepository.save(relationship);
+        return null;
     }
-
+    
     /**
      * Delete a relationship by ID.
-     * @param id ID of the relationship to delete
-     * @throws RuntimeException if the relationship does not exist
+     * 
+     * @param id The ID of the relationship to delete.
+     * @return True if the relationship was deleted, false otherwise.
      */
     @Transactional
-    public void deleteRelationship(Long id) {
-        Relationship relationship = relationshipRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Relationship not found with id: " + id));
-        
-        relationshipRepository.delete(relationship);
+    public boolean deleteRelationship(String id) {
+        if (relationshipRepository.existsById(id)) {
+            relationshipRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
-
+    
     /**
-     * Search relationships by a query string.
-     * @param query Query string to search for
-     * @return List of relationships matching the search query
+     * Search for relationships by type.
+     * 
+     * @param searchText The text to search for.
+     * @return A list of relationships matching the search criteria.
      */
-    public List<Relationship> searchRelationships(String query) {
-        return relationshipRepository.searchRelationships(query);
+    public List<Relationship> searchRelationships(String searchText) {
+        return relationshipRepository.findByTypeContainingIgnoreCase(searchText);
     }
-
+    
+    /**
+     * Find relationships by type.
+     * 
+     * @param type The type of relationships to find.
+     * @return A list of relationships with the specified type.
+     */
+    public List<Relationship> findRelationshipsByType(String type) {
+        return relationshipRepository.findByType(type);
+    }
+    
     /**
      * Get data for graph visualization.
-     * @return Map containing nodes and relationships for visualization
+     * 
+     * @return A map containing nodes and relationships for visualization.
      */
     public Map<String, Object> getGraphVisualizationData() {
         List<Node> nodes = nodeRepository.findAll();
         List<Relationship> relationships = relationshipRepository.findAll();
         
-        Map<String, Object> result = new HashMap<>();
-        result.put("nodes", nodes);
-        result.put("relationships", relationships);
+        Map<String, Object> visualizationData = new HashMap<>();
+        visualizationData.put("nodes", nodes);
+        visualizationData.put("relationships", relationships);
         
-        return result;
+        return visualizationData;
     }
-
+    
     /**
-     * Validate a node.
-     * @param node Node to validate
-     * @throws IllegalArgumentException if validation fails
+     * Search for nodes and relationships.
+     * 
+     * @param query The search query.
+     * @return A map containing nodes and relationships matching the search criteria.
      */
-    private void validateNode(Node node) {
-        if (node.getLabel() == null || node.getLabel().trim().isEmpty()) {
-            throw new IllegalArgumentException("Node label cannot be empty");
-        }
+    public Map<String, Object> searchGraph(String query) {
+        List<Node> nodes = searchNodes(query);
+        List<Relationship> relationships = searchRelationships(query);
         
-        if (node.getType() == null || node.getType().trim().isEmpty()) {
-            throw new IllegalArgumentException("Node type cannot be empty");
-        }
-    }
-
-    /**
-     * Validate a relationship.
-     * @param relationship Relationship to validate
-     * @throws IllegalArgumentException if validation fails
-     */
-    private void validateRelationship(Relationship relationship) {
-        if (relationship.getType() == null || relationship.getType().trim().isEmpty()) {
-            throw new IllegalArgumentException("Relationship type cannot be empty");
-        }
+        Map<String, Object> searchResults = new HashMap<>();
+        searchResults.put("nodes", nodes);
+        searchResults.put("relationships", relationships);
         
-        if (relationship.getSource() == null || relationship.getSource().getId() == null) {
-            throw new IllegalArgumentException("Source node must be specified");
-        }
-        
-        if (relationship.getTarget() == null || relationship.getTarget().getId() == null) {
-            throw new IllegalArgumentException("Target node must be specified");
-        }
+        return searchResults;
     }
 }

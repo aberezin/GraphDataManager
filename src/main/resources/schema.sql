@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS users;
 
 -- Create users table
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
@@ -12,7 +12,7 @@ CREATE TABLE users (
 );
 
 -- Create projects table
-CREATE TABLE projects (
+CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
     description TEXT,
@@ -23,15 +23,16 @@ CREATE TABLE projects (
 );
 
 -- Insert sample users
-INSERT INTO users (username, email, first_name, last_name) VALUES 
-('johndoe', 'john.doe@example.com', 'John', 'Doe'),
-('janedoe', 'jane.doe@example.com', 'Jane', 'Doe'),
-('bobsmith', 'bob.smith@example.com', 'Bob', 'Smith');
+INSERT INTO users (username, email, first_name, last_name)
+VALUES 
+    ('user1', 'user1@example.com', 'John', 'Doe'),
+    ('user2', 'user2@example.com', 'Jane', 'Smith'),
+    ('user3', 'user3@example.com', 'Bob', 'Johnson');
 
 -- Insert sample projects
-INSERT INTO projects (name, description, created_at, updated_at, user_id) VALUES 
-('Web Application', 'A web application project using Spring Boot and React', datetime('now', '-30 days'), datetime('now', '-5 days'), 1),
-('Mobile App', 'A cross-platform mobile application for iOS and Android', datetime('now', '-60 days'), datetime('now', '-2 days'), 1),
-('Data Analysis', 'Project analyzing large datasets using machine learning', datetime('now', '-45 days'), datetime('now', '-1 days'), 2),
-('IoT Platform', 'Internet of Things platform for smart home devices', datetime('now', '-90 days'), datetime('now', '-10 days'), 3),
-('E-commerce Site', 'Online shopping website with payment processing', datetime('now', '-120 days'), datetime('now', '-25 days'), 2);
+INSERT INTO projects (name, description, created_at, updated_at, user_id)
+VALUES 
+    ('Project 1', 'This is a sample project 1', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+    ('Project 2', 'This is a sample project 2', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+    ('Project 3', 'This is a sample project 3', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2),
+    ('Project 4', 'This is a sample project 4', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 3);

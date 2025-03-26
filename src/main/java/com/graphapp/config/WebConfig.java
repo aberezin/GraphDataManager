@@ -6,25 +6,24 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web configuration for the application.
- * This class configures CORS and other web-related settings.
+ * Configuration for web-related settings, including CORS.
  */
 @Configuration
 @EnableWebMvc
 public class WebConfig implements WebMvcConfigurer {
 
     /**
-     * Configures CORS settings to allow the React frontend to access the API.
+     * Configure CORS for cross-origin requests.
      * 
      * @param registry The CORS registry.
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5000", "http://0.0.0.0:5000", "http://127.0.0.1:5000")
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true)
-                .maxAge(3600);
+        registry.addMapping("/api/**")
+            .allowedOrigins("http://localhost:3000", "http://localhost:5000")
+            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+            .allowedHeaders("*")
+            .allowCredentials(true)
+            .maxAge(3600);
     }
 }

@@ -1,240 +1,157 @@
 package com.graphapp.controller;
 
-import com.graphapp.model.relational.Project;
-import com.graphapp.model.relational.User;
-import com.graphapp.service.RelationalDataService;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.graphapp.model.relational.Project;
+import com.graphapp.model.relational.User;
+import com.graphapp.service.RelationalDataService;
 
 /**
  * REST controller for relational data operations.
  */
 @RestController
 @RequestMapping("/api/relational")
-@CrossOrigin(origins = "*")
 public class RelationalDataController {
-
+    
     private final RelationalDataService relationalDataService;
-
+    
     @Autowired
     public RelationalDataController(RelationalDataService relationalDataService) {
         this.relationalDataService = relationalDataService;
     }
-
-    /**
-     * Get all users.
-     * @return ResponseEntity containing a list of all users
-     */
+    
+    // User endpoints
+    
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = relationalDataService.getAllUsers();
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        return ResponseEntity.ok(users);
     }
-
-    /**
-     * Get a user by ID.
-     * @param id ID of the user to find
-     * @return ResponseEntity containing the user if found
-     */
+    
     @GetMapping("/users/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return relationalDataService.getUserById(id)
-                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        User user = relationalDataService.getUserById(id);
+        if (user != null) {
+            return ResponseEntity.ok(user);
+        }
+        return ResponseEntity.notFound().build();
     }
-
-    /**
-     * Create a new user.
-     * @param user User to create
-     * @return ResponseEntity containing the created user
-     */
+    
     @PostMapping("/users")
-    public ResponseEntity<?> createUser(@RequestBody User user) {
+    public ResponseEntity<User> createUser(@RequestBody User user) {
         try {
             User createdUser = relationalDataService.createUser(user);
-            return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
         } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.badRequest().build();
         }
     }
-
-    /**
-     * Update an existing user.
-     * @param id ID of the user to update
-     * @param user Updated user details
-     * @return ResponseEntity containing the updated user
-     */
+    
     @PutMapping("/users/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
+    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
         try {
-            User updatedUser = relationalDataService.updateUser(id, user);
-            return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            if (e instanceof IllegalArgumentException) {
-                Map<String, String> error = new HashMap<>();
-                error.put("error", e.getMessage());
-                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            User updatedUser = relationalDataService.updateUser(id, userDetails);
+            if (updatedUser != null) {
+                return ResponseEntity.ok(updatedUser);
             }
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
-
-    /**
-     * Delete a user by ID.
-     * @param id ID of the user to delete
-     * @return ResponseEntity with no content
-     */
+    
     @DeleteMapping("/users/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        try {
-            relationalDataService.deleteUser(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        boolean deleted = relationalDataService.deleteUser(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.notFound().build();
     }
-
-    /**
-     * Search users by a query string.
-     * @param query Query string to search for
-     * @return ResponseEntity containing a list of users matching the search query
-     */
+    
     @GetMapping("/users/search")
     public ResponseEntity<List<User>> searchUsers(@RequestParam String query) {
         List<User> users = relationalDataService.searchUsers(query);
-        return new ResponseEntity<>(users, HttpStatus.OK);
+        return ResponseEntity.ok(users);
     }
-
-    /**
-     * Get all projects.
-     * @return ResponseEntity containing a list of all projects
-     */
+    
+    // Project endpoints
+    
     @GetMapping("/projects")
     public ResponseEntity<List<Project>> getAllProjects() {
         List<Project> projects = relationalDataService.getAllProjects();
-        return new ResponseEntity<>(projects, HttpStatus.OK);
+        return ResponseEntity.ok(projects);
     }
-
-    /**
-     * Get a project by ID.
-     * @param id ID of the project to find
-     * @return ResponseEntity containing the project if found
-     */
+    
     @GetMapping("/projects/{id}")
     public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
-        return relationalDataService.getProjectById(id)
-                .map(project -> new ResponseEntity<>(project, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Project project = relationalDataService.getProjectById(id);
+        if (project != null) {
+            return ResponseEntity.ok(project);
+        }
+        return ResponseEntity.notFound().build();
     }
-
-    /**
-     * Get projects by user ID.
-     * @param userId ID of the user to find projects for
-     * @return ResponseEntity containing a list of projects for the given user
-     */
+    
     @GetMapping("/users/{userId}/projects")
     public ResponseEntity<List<Project>> getProjectsByUserId(@PathVariable Long userId) {
         List<Project> projects = relationalDataService.getProjectsByUserId(userId);
-        return new ResponseEntity<>(projects, HttpStatus.OK);
+        return ResponseEntity.ok(projects);
     }
-
-    /**
-     * Create a new project.
-     * @param project Project to create
-     * @return ResponseEntity containing the created project
-     */
+    
     @PostMapping("/projects")
-    public ResponseEntity<?> createProject(@RequestBody Project project) {
+    public ResponseEntity<Project> createProject(@RequestBody Project project) {
         try {
             Project createdProject = relationalDataService.createProject(project);
-            return new ResponseEntity<>(createdProject, HttpStatus.CREATED);
-        } catch (RuntimeException | IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
-
-    /**
-     * Update an existing project.
-     * @param id ID of the project to update
-     * @param project Updated project details
-     * @return ResponseEntity containing the updated project
-     */
+    
     @PutMapping("/projects/{id}")
-    public ResponseEntity<?> updateProject(@PathVariable Long id, @RequestBody Project project) {
+    public ResponseEntity<Project> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
         try {
-            Project updatedProject = relationalDataService.updateProject(id, project);
-            return new ResponseEntity<>(updatedProject, HttpStatus.OK);
-        } catch (RuntimeException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            if (e instanceof IllegalArgumentException) {
-                return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+            Project updatedProject = relationalDataService.updateProject(id, projectDetails);
+            if (updatedProject != null) {
+                return ResponseEntity.ok(updatedProject);
             }
-            return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
-
-    /**
-     * Delete a project by ID.
-     * @param id ID of the project to delete
-     * @return ResponseEntity with no content
-     */
+    
     @DeleteMapping("/projects/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
-        try {
-            relationalDataService.deleteProject(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        } catch (RuntimeException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        boolean deleted = relationalDataService.deleteProject(id);
+        if (deleted) {
+            return ResponseEntity.noContent().build();
         }
+        return ResponseEntity.notFound().build();
     }
-
-    /**
-     * Search projects by a query string.
-     * @param query Query string to search for
-     * @return ResponseEntity containing a list of projects matching the search query
-     */
+    
     @GetMapping("/projects/search")
     public ResponseEntity<List<Project>> searchProjects(@RequestParam String query) {
         List<Project> projects = relationalDataService.searchProjects(query);
-        return new ResponseEntity<>(projects, HttpStatus.OK);
+        return ResponseEntity.ok(projects);
     }
-
-    /**
-     * Get recent projects.
-     * @param limit Maximum number of projects to return (optional)
-     * @return ResponseEntity containing a list of recent projects
-     */
+    
     @GetMapping("/projects/recent")
-    public ResponseEntity<List<Project>> getRecentProjects(@RequestParam(required = false, defaultValue = "5") int limit) {
+    public ResponseEntity<List<Project>> getRecentProjects(@RequestParam(defaultValue = "5") int limit) {
         List<Project> projects = relationalDataService.getRecentProjects(limit);
-        return new ResponseEntity<>(projects, HttpStatus.OK);
-    }
-
-    /**
-     * Search for users and projects.
-     * @param query Query string to search for
-     * @return ResponseEntity containing users and projects matching the search query
-     */
-    @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchRelationalData(@RequestParam String query) {
-        List<User> users = relationalDataService.searchUsers(query);
-        List<Project> projects = relationalDataService.searchProjects(query);
-        
-        Map<String, Object> result = new HashMap<>();
-        result.put("users", users);
-        result.put("projects", projects);
-        
-        return new ResponseEntity<>(result, HttpStatus.OK);
+        return ResponseEntity.ok(projects);
     }
 }

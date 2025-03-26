@@ -1,66 +1,64 @@
 package com.graphapp.repository.graph;
 
-import com.graphapp.model.graph.Relationship;
+import java.util.List;
+
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import com.graphapp.model.graph.Relationship;
 
 /**
- * Repository interface for Relationship entities in Neo4j.
+ * Repository interface for Relationship entities.
+ * This interface provides methods to perform CRUD operations on Neo4j relationships.
  */
 @Repository
-public interface RelationshipRepository extends Neo4jRepository<Relationship, Long> {
-
+public interface RelationshipRepository extends Neo4jRepository<Relationship, String> {
+    
     /**
-     * Find all relationships by type.
-     * @param type Type of the relationships to find
-     * @return List of relationships with the given type
+     * Find relationships by type.
+     * 
+     * @param type The type of relationships to find.
+     * @return A list of relationships with the specified type.
      */
     List<Relationship> findByType(String type);
-
+    
     /**
-     * Find all relationships where a specific node is the target.
-     * @param nodeId ID of the target node
-     * @return List of relationships targeting the given node
+     * Find relationships by source node ID.
+     * 
+     * @param sourceId The ID of the source node.
+     * @return A list of relationships with the specified source node.
      */
-    @Query("MATCH (n:Node)-[r]->(m:Node) WHERE ID(m) = $nodeId RETURN r, n, m")
-    List<Relationship> findByTargetNodeId(@Param("nodeId") Long nodeId);
-
+    @Query("MATCH (s)-[r]->(t) WHERE ID(s) = $sourceId RETURN r, s, t")
+    List<Relationship> findBySourceId(@Param("sourceId") String sourceId);
+    
     /**
-     * Find all relationships where a specific node is the source.
-     * @param nodeId ID of the source node
-     * @return List of relationships originating from the given node
+     * Find relationships by target node ID.
+     * 
+     * @param targetId The ID of the target node.
+     * @return A list of relationships with the specified target node.
      */
-    @Query("MATCH (n:Node)-[r]->(m:Node) WHERE ID(n) = $nodeId RETURN r, n, m")
-    List<Relationship> findBySourceNodeId(@Param("nodeId") Long nodeId);
-
+    @Query("MATCH (s)-[r]->(t) WHERE ID(t) = $targetId RETURN r, s, t")
+    List<Relationship> findByTargetId(@Param("targetId") String targetId);
+    
     /**
-     * Find all relationships between two nodes.
-     * @param sourceNodeId ID of the source node
-     * @param targetNodeId ID of the target node
-     * @return List of relationships between the given nodes
+     * Find relationships by source and target node IDs.
+     * 
+     * @param sourceId The ID of the source node.
+     * @param targetId The ID of the target node.
+     * @return A list of relationships between the specified source and target nodes.
      */
-    @Query("MATCH (n:Node)-[r]->(m:Node) WHERE ID(n) = $sourceNodeId AND ID(m) = $targetNodeId RETURN r, n, m")
-    List<Relationship> findBySourceAndTargetNodeIds(@Param("sourceNodeId") Long sourceNodeId, @Param("targetNodeId") Long targetNodeId);
-
+    @Query("MATCH (s)-[r]->(t) WHERE ID(s) = $sourceId AND ID(t) = $targetId RETURN r, s, t")
+    List<Relationship> findBySourceIdAndTargetId(
+            @Param("sourceId") String sourceId, 
+            @Param("targetId") String targetId);
+    
     /**
-     * Find all relationships with a specific property value.
-     * @param propertyKey The property key to check
-     * @param propertyValue The property value to find
-     * @return List of relationships with the given property value
+     * Search for relationships by type containing the given text.
+     * 
+     * @param searchText The text to search for in relationship types.
+     * @return A list of relationships matching the search criteria.
      */
-    @Query("MATCH (n:Node)-[r]->(m:Node) WHERE r[$propertyKey] = $propertyValue RETURN r, n, m")
-    List<Relationship> findByProperty(@Param("propertyKey") String propertyKey, @Param("propertyValue") Object propertyValue);
-
-    /**
-     * Search relationships by a text query.
-     * @param query Text to search for in relationship properties
-     * @return List of relationships matching the search query
-     */
-    @Query("MATCH (n:Node)-[r]->(m:Node) WHERE r.type CONTAINS $query " +
-           "OR ANY(key IN keys(r) WHERE r[key] CONTAINS $query) RETURN r, n, m")
-    List<Relationship> searchRelationships(@Param("query") String query);
+    List<Relationship> findByTypeContainingIgnoreCase(String searchText);
 }
