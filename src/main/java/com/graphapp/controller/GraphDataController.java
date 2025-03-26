@@ -11,128 +11,227 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST Controller for graph data operations
+ */
 @RestController
 @RequestMapping("/api/graph")
 public class GraphDataController {
-    
+
     private final GraphDataService graphDataService;
-    
+
     @Autowired
     public GraphDataController(GraphDataService graphDataService) {
         this.graphDataService = graphDataService;
     }
-    
-    // Node endpoints
+
+    /**
+     * Get all nodes
+     */
     @GetMapping("/nodes")
     public ResponseEntity<List<Node>> getAllNodes() {
-        return ResponseEntity.ok(graphDataService.getAllNodes());
+        List<Node> nodes = graphDataService.getAllNodes();
+        return ResponseEntity.ok(nodes);
     }
-    
+
+    /**
+     * Get node by id
+     */
     @GetMapping("/nodes/{id}")
-    public ResponseEntity<?> getNodeById(@PathVariable String id) {
+    public ResponseEntity<Node> getNodeById(@PathVariable Long id) {
         return graphDataService.getNodeById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
-    @GetMapping("/nodes/type/{type}")
-    public ResponseEntity<List<Node>> getNodesByType(@PathVariable String type) {
-        return ResponseEntity.ok(graphDataService.getNodesByType(type));
-    }
-    
-    @GetMapping("/nodes/label/{label}")
-    public ResponseEntity<List<Node>> getNodesByLabel(@PathVariable String label) {
-        return ResponseEntity.ok(graphDataService.getNodesByLabel(label));
-    }
-    
+
+    /**
+     * Create a new node
+     */
     @PostMapping("/nodes")
-    public ResponseEntity<?> createNode(@RequestBody Node node) {
+    public ResponseEntity<Node> createNode(@RequestBody Node node) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(graphDataService.createNode(node));
+            Node createdNode = graphDataService.createNode(node);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdNode);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    /**
+     * Update an existing node
+     */
     @PutMapping("/nodes/{id}")
-    public ResponseEntity<?> updateNode(@PathVariable String id, @RequestBody Node nodeDetails) {
+    public ResponseEntity<Node> updateNode(@PathVariable Long id, @RequestBody Node node) {
         try {
-            return ResponseEntity.ok(graphDataService.updateNode(id, nodeDetails));
+            Node updatedNode = graphDataService.updateNode(id, node);
+            return ResponseEntity.ok(updatedNode);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    /**
+     * Delete a node
+     */
     @DeleteMapping("/nodes/{id}")
-    public ResponseEntity<?> deleteNode(@PathVariable String id) {
+    public ResponseEntity<Void> deleteNode(@PathVariable Long id) {
         try {
             graphDataService.deleteNode(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
-    
-    // Relationship endpoints
+
+    /**
+     * Get nodes by type
+     */
+    @GetMapping("/nodes/type/{type}")
+    public ResponseEntity<List<Node>> getNodesByType(@PathVariable String type) {
+        List<Node> nodes = graphDataService.getNodesByType(type);
+        return ResponseEntity.ok(nodes);
+    }
+
+    /**
+     * Get nodes by label
+     */
+    @GetMapping("/nodes/label/{label}")
+    public ResponseEntity<List<Node>> getNodesByLabel(@PathVariable String label) {
+        List<Node> nodes = graphDataService.getNodesByLabel(label);
+        return ResponseEntity.ok(nodes);
+    }
+
+    /**
+     * Search nodes by text
+     */
+    @GetMapping("/nodes/search")
+    public ResponseEntity<List<Node>> searchNodes(@RequestParam String query) {
+        List<Node> nodes = graphDataService.searchNodes(query);
+        return ResponseEntity.ok(nodes);
+    }
+
+    /**
+     * Get all relationships
+     */
     @GetMapping("/relationships")
     public ResponseEntity<List<Relationship>> getAllRelationships() {
-        return ResponseEntity.ok(graphDataService.getAllRelationships());
+        List<Relationship> relationships = graphDataService.getAllRelationships();
+        return ResponseEntity.ok(relationships);
     }
-    
+
+    /**
+     * Get relationship by id
+     */
     @GetMapping("/relationships/{id}")
-    public ResponseEntity<?> getRelationshipById(@PathVariable String id) {
+    public ResponseEntity<Relationship> getRelationshipById(@PathVariable Long id) {
         return graphDataService.getRelationshipById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
-    
-    @GetMapping("/relationships/type/{type}")
-    public ResponseEntity<List<Relationship>> getRelationshipsByType(@PathVariable String type) {
-        return ResponseEntity.ok(graphDataService.getRelationshipsByType(type));
-    }
-    
+
+    /**
+     * Create a new relationship
+     */
     @PostMapping("/relationships")
-    public ResponseEntity<?> createRelationship(@RequestBody Relationship relationship) {
+    public ResponseEntity<Relationship> createRelationship(@RequestBody Relationship relationship) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(graphDataService.createRelationship(relationship));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            Relationship createdRelationship = graphDataService.createRelationship(relationship);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdRelationship);
+        } catch (IllegalArgumentException | RuntimeException e) {
+            return ResponseEntity.badRequest().body(null);
         }
     }
-    
+
+    /**
+     * Update an existing relationship
+     */
     @PutMapping("/relationships/{id}")
-    public ResponseEntity<?> updateRelationship(@PathVariable String id, @RequestBody Relationship relationshipDetails) {
+    public ResponseEntity<Relationship> updateRelationship(@PathVariable Long id, @RequestBody Relationship relationship) {
         try {
-            return ResponseEntity.ok(graphDataService.updateRelationship(id, relationshipDetails));
+            Relationship updatedRelationship = graphDataService.updateRelationship(id, relationship);
+            return ResponseEntity.ok(updatedRelationship);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
-    
+
+    /**
+     * Delete a relationship
+     */
     @DeleteMapping("/relationships/{id}")
-    public ResponseEntity<?> deleteRelationship(@PathVariable String id) {
+    public ResponseEntity<Void> deleteRelationship(@PathVariable Long id) {
         try {
             graphDataService.deleteRelationship(id);
-            return ResponseEntity.ok().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
-    
-    // Search and visualization endpoints
-    @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchGraph(@RequestParam String query) {
-        List<Node> nodes = graphDataService.searchNodes(query);
-        List<Relationship> relationships = graphDataService.searchRelationships(query);
-        
-        return ResponseEntity.ok(Map.of(
-                "nodes", nodes,
-                "relationships", relationships
-        ));
+
+    /**
+     * Get relationships by type
+     */
+    @GetMapping("/relationships/type/{type}")
+    public ResponseEntity<List<Relationship>> getRelationshipsByType(@PathVariable String type) {
+        List<Relationship> relationships = graphDataService.getRelationshipsByType(type);
+        return ResponseEntity.ok(relationships);
     }
-    
+
+    /**
+     * Get relationships by source node id
+     */
+    @GetMapping("/relationships/source/{nodeId}")
+    public ResponseEntity<List<Relationship>> getRelationshipsBySourceNodeId(@PathVariable Long nodeId) {
+        List<Relationship> relationships = graphDataService.getRelationshipsBySourceNodeId(nodeId);
+        return ResponseEntity.ok(relationships);
+    }
+
+    /**
+     * Get relationships by target node id
+     */
+    @GetMapping("/relationships/target/{nodeId}")
+    public ResponseEntity<List<Relationship>> getRelationshipsByTargetNodeId(@PathVariable Long nodeId) {
+        List<Relationship> relationships = graphDataService.getRelationshipsByTargetNodeId(nodeId);
+        return ResponseEntity.ok(relationships);
+    }
+
+    /**
+     * Get relationships connected to a node (either as source or target)
+     */
+    @GetMapping("/relationships/node/{nodeId}")
+    public ResponseEntity<List<Relationship>> getRelationshipsByNodeId(@PathVariable Long nodeId) {
+        List<Relationship> relationships = graphDataService.getRelationshipsByNodeId(nodeId);
+        return ResponseEntity.ok(relationships);
+    }
+
+    /**
+     * Search relationships by text
+     */
+    @GetMapping("/relationships/search")
+    public ResponseEntity<List<Relationship>> searchRelationships(@RequestParam String query) {
+        List<Relationship> relationships = graphDataService.searchRelationships(query);
+        return ResponseEntity.ok(relationships);
+    }
+
+    /**
+     * Get data for graph visualization (nodes and relationships)
+     */
     @GetMapping("/visualization")
     public ResponseEntity<Map<String, Object>> getGraphVisualizationData() {
-        return ResponseEntity.ok(graphDataService.getGraphVisualizationData());
+        Map<String, Object> data = graphDataService.getGraphVisualizationData();
+        return ResponseEntity.ok(data);
+    }
+
+    /**
+     * Search in the graph (nodes and relationships)
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchGraph(@RequestParam String query) {
+        Map<String, Object> results = graphDataService.searchGraph(query);
+        return ResponseEntity.ok(results);
     }
 }
