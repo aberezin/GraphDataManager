@@ -37,24 +37,14 @@ public class RelationalDataService {
         return userRepository.findByUsername(username);
     }
     
-    public Optional<User> getUserByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-    
     @Transactional
     public User createUser(User user) {
-        // Validation logic
-        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be empty");
-        }
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email cannot be empty");
-        }
+        validateUser(user);
         
-        // Check for duplicate username or email
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("Username already exists: " + user.getUsername());
         }
+        
         if (userRepository.existsByEmail(user.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + user.getEmail());
         }
@@ -63,23 +53,28 @@ public class RelationalDataService {
     }
     
     @Transactional
-    public Optional<User> updateUser(Long id, User userDetails) {
+    public User updateUser(Long id, User userDetails) {
         return userRepository.findById(id)
                 .map(existingUser -> {
-                    // Update only provided fields
-                    if (userDetails.getUsername() != null 
-                            && !userDetails.getUsername().equals(existingUser.getUsername())) {
-                        if (userRepository.existsByUsername(userDetails.getUsername())) {
-                            throw new IllegalArgumentException("Username already exists: " + userDetails.getUsername());
-                        }
+                    // Validate unique fields if they are being changed
+                    if (userDetails.getUsername() != null && 
+                            !existingUser.getUsername().equals(userDetails.getUsername()) &&
+                            userRepository.existsByUsername(userDetails.getUsername())) {
+                        throw new IllegalArgumentException("Username already exists: " + userDetails.getUsername());
+                    }
+                    
+                    if (userDetails.getEmail() != null && 
+                            !existingUser.getEmail().equals(userDetails.getEmail()) &&
+                            userRepository.existsByEmail(userDetails.getEmail())) {
+                        throw new IllegalArgumentException("Email already exists: " + userDetails.getEmail());
+                    }
+                    
+                    // Update fields if provided
+                    if (userDetails.getUsername() != null) {
                         existingUser.setUsername(userDetails.getUsername());
                     }
                     
-                    if (userDetails.getEmail() != null 
-                            && !userDetails.getEmail().equals(existingUser.getEmail())) {
-                        if (userRepository.existsByEmail(userDetails.getEmail())) {
-                            throw new IllegalArgumentException("Email already exists: " + userDetails.getEmail());
-                        }
+                    if (userDetails.getEmail() != null) {
                         existingUser.setEmail(userDetails.getEmail());
                     }
                     
@@ -92,17 +87,16 @@ public class RelationalDataService {
                     }
                     
                     return userRepository.save(existingUser);
-                });
+                })
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
     }
     
     @Transactional
-    public boolean deleteUser(Long id) {
-        return userRepository.findById(id)
-                .map(user -> {
-                    userRepository.delete(user);
-                    return true;
-                })
-                .orElse(false);
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + id));
+        
+        userRepository.delete(user);
     }
     
     public List<User> searchUsers(String query) {
@@ -119,41 +113,31 @@ public class RelationalDataService {
     }
     
     public List<Project> getProjectsByUserId(Long userId) {
-        // Validate user exists
         if (!userRepository.existsById(userId)) {
-            throw new IllegalArgumentException("User not found: " + userId);
+            throw new IllegalArgumentException("User not found with id: " + userId);
         }
+        
         return projectRepository.findByUserId(userId);
     }
     
     @Transactional
     public Project createProject(Project project) {
-        // Validation logic
-        if (project.getName() == null || project.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Project name cannot be empty");
-        }
+        validateProject(project);
         
-        // Validate user exists if provided
         if (project.getUser() != null && project.getUser().getId() != null) {
-            Long userId = project.getUser().getId();
-            User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+            User user = userRepository.findById(project.getUser().getId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + project.getUser().getId()));
+            
             project.setUser(user);
         }
-        
-        // Set timestamps
-        LocalDateTime now = LocalDateTime.now();
-        project.setCreatedAt(now);
-        project.setUpdatedAt(now);
         
         return projectRepository.save(project);
     }
     
     @Transactional
-    public Optional<Project> updateProject(Long id, Project projectDetails) {
+    public Project updateProject(Long id, Project projectDetails) {
         return projectRepository.findById(id)
                 .map(existingProject -> {
-                    // Update only provided fields
                     if (projectDetails.getName() != null) {
                         existingProject.setName(projectDetails.getName());
                     }
@@ -164,27 +148,25 @@ public class RelationalDataService {
                     
                     // Update user if provided
                     if (projectDetails.getUser() != null && projectDetails.getUser().getId() != null) {
-                        Long userId = projectDetails.getUser().getId();
-                        User user = userRepository.findById(userId)
-                                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                        User user = userRepository.findById(projectDetails.getUser().getId())
+                                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + projectDetails.getUser().getId()));
+                        
                         existingProject.setUser(user);
                     }
                     
-                    // Update timestamp
                     existingProject.setUpdatedAt(LocalDateTime.now());
                     
                     return projectRepository.save(existingProject);
-                });
+                })
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + id));
     }
     
     @Transactional
-    public boolean deleteProject(Long id) {
-        return projectRepository.findById(id)
-                .map(project -> {
-                    projectRepository.delete(project);
-                    return true;
-                })
-                .orElse(false);
+    public void deleteProject(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Project not found with id: " + id));
+        
+        projectRepository.delete(project);
     }
     
     public List<Project> searchProjects(String query) {
@@ -193,5 +175,27 @@ public class RelationalDataService {
     
     public List<Project> getRecentProjects() {
         return projectRepository.findRecentProjects();
+    }
+    
+    // Validation methods
+    private void validateUser(User user) {
+        if (user.getUsername() == null || user.getUsername().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be empty");
+        }
+        
+        if (user.getEmail() == null || user.getEmail().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be empty");
+        }
+        
+        // Simple email validation
+        if (!user.getEmail().matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
+            throw new IllegalArgumentException("Invalid email format");
+        }
+    }
+    
+    private void validateProject(Project project) {
+        if (project.getName() == null || project.getName().isEmpty()) {
+            throw new IllegalArgumentException("Project name cannot be empty");
+        }
     }
 }

@@ -29,7 +29,7 @@ public class GraphDataController {
     }
     
     @GetMapping("/nodes/{id}")
-    public ResponseEntity<Node> getNodeById(@PathVariable String id) {
+    public ResponseEntity<?> getNodeById(@PathVariable String id) {
         return graphDataService.getNodeById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -46,31 +46,31 @@ public class GraphDataController {
     }
     
     @PostMapping("/nodes")
-    public ResponseEntity<Node> createNode(@RequestBody Node node) {
+    public ResponseEntity<?> createNode(@RequestBody Node node) {
         try {
-            Node createdNode = graphDataService.createNode(node);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdNode);
+            return ResponseEntity.status(HttpStatus.CREATED).body(graphDataService.createNode(node));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @PutMapping("/nodes/{id}")
-    public ResponseEntity<Node> updateNode(@PathVariable String id, @RequestBody Node nodeDetails) {
+    public ResponseEntity<?> updateNode(@PathVariable String id, @RequestBody Node nodeDetails) {
         try {
-            return graphDataService.updateNode(id, nodeDetails)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            return ResponseEntity.ok(graphDataService.updateNode(id, nodeDetails));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @DeleteMapping("/nodes/{id}")
-    public ResponseEntity<Void> deleteNode(@PathVariable String id) {
-        return graphDataService.deleteNode(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteNode(@PathVariable String id) {
+        try {
+            graphDataService.deleteNode(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     // Relationship endpoints
@@ -80,7 +80,7 @@ public class GraphDataController {
     }
     
     @GetMapping("/relationships/{id}")
-    public ResponseEntity<Relationship> getRelationshipById(@PathVariable String id) {
+    public ResponseEntity<?> getRelationshipById(@PathVariable String id) {
         return graphDataService.getRelationshipById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -92,42 +92,47 @@ public class GraphDataController {
     }
     
     @PostMapping("/relationships")
-    public ResponseEntity<Relationship> createRelationship(@RequestBody Relationship relationship) {
+    public ResponseEntity<?> createRelationship(@RequestBody Relationship relationship) {
         try {
-            Relationship createdRelationship = graphDataService.createRelationship(relationship);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdRelationship);
+            return ResponseEntity.status(HttpStatus.CREATED).body(graphDataService.createRelationship(relationship));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @PutMapping("/relationships/{id}")
-    public ResponseEntity<Relationship> updateRelationship(@PathVariable String id, @RequestBody Relationship relationshipDetails) {
+    public ResponseEntity<?> updateRelationship(@PathVariable String id, @RequestBody Relationship relationshipDetails) {
         try {
-            return graphDataService.updateRelationship(id, relationshipDetails)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            return ResponseEntity.ok(graphDataService.updateRelationship(id, relationshipDetails));
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @DeleteMapping("/relationships/{id}")
-    public ResponseEntity<Void> deleteRelationship(@PathVariable String id) {
-        return graphDataService.deleteRelationship(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteRelationship(@PathVariable String id) {
+        try {
+            graphDataService.deleteRelationship(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
-    // Visualization endpoint
+    // Search and visualization endpoints
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, Object>> searchGraph(@RequestParam String query) {
+        List<Node> nodes = graphDataService.searchNodes(query);
+        List<Relationship> relationships = graphDataService.searchRelationships(query);
+        
+        return ResponseEntity.ok(Map.of(
+                "nodes", nodes,
+                "relationships", relationships
+        ));
+    }
+    
     @GetMapping("/visualization")
     public ResponseEntity<Map<String, Object>> getGraphVisualizationData() {
         return ResponseEntity.ok(graphDataService.getGraphVisualizationData());
-    }
-    
-    // Search endpoint
-    @GetMapping("/search")
-    public ResponseEntity<Map<String, Object>> searchGraph(@RequestParam String query) {
-        return ResponseEntity.ok(graphDataService.searchGraph(query));
     }
 }
