@@ -13,14 +13,14 @@ public interface RelationshipRepository extends Neo4jRepository<Relationship, St
     
     List<Relationship> findByType(String type);
     
-    @Query("MATCH (s)-[r]->(t) WHERE r.type CONTAINS $searchTerm RETURN r, s, t")
-    List<Relationship> searchRelationships(@Param("searchTerm") String searchTerm);
-    
-    @Query("MATCH (s)-[r]->(t) RETURN r, s, t")
+    @Query("MATCH (source)-[r]->(target) RETURN source, r, target")
     List<Relationship> findAllRelationshipsWithNodes();
     
-    @Query("MATCH (s)-[r]->(t) WHERE id(s) = $sourceId AND id(t) = $targetId RETURN r")
-    List<Relationship> findRelationshipsBetweenNodes(
-            @Param("sourceId") String sourceId, 
-            @Param("targetId") String targetId);
+    @Query("MATCH (source)-[r]->(target) WHERE " +
+           "toLower(r.type) CONTAINS toLower($query) OR " +
+           "ANY(prop IN keys(r) WHERE toLower(toString(r[prop])) CONTAINS toLower($query)) OR " +
+           "toLower(source.label) CONTAINS toLower($query) OR " +
+           "toLower(target.label) CONTAINS toLower($query) " +
+           "RETURN source, r, target")
+    List<Relationship> searchRelationships(@Param("query") String query);
 }

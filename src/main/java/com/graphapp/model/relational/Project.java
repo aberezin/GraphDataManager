@@ -1,5 +1,9 @@
 package com.graphapp.model.relational;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,35 +15,36 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String name;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 500)
     private String description;
     
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
     
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
+    @JsonIgnore // Prevent circular reference in JSON serialization
     private User user;
     
     // Default constructor
     public Project() {
     }
     
+    public Project(String name) {
+        this.name = name;
+    }
+    
     public Project(String name, String description) {
         this.name = name;
         this.description = description;
-    }
-    
-    public Project(String name, String description, User user) {
-        this.name = name;
-        this.description = description;
-        this.user = user;
     }
     
     // Getters and Setters
@@ -91,13 +96,15 @@ public class Project {
         this.user = user;
     }
     
-    // Before update callback to update the updatedAt timestamp
-    @PreUpdate
-    @PrePersist
-    public void updateTimestamps() {
-        this.updatedAt = LocalDateTime.now();
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+    @Override
+    public String toString() {
+        return "Project{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", userId=" + (user != null ? user.getId() : null) +
+                '}';
     }
 }

@@ -15,9 +15,9 @@ public interface NodeRepository extends Neo4jRepository<Node, String> {
     
     List<Node> findByLabel(String label);
     
-    @Query("MATCH (n) WHERE n.label CONTAINS $searchTerm OR n.type CONTAINS $searchTerm RETURN n")
-    List<Node> searchNodes(@Param("searchTerm") String searchTerm);
-    
-    @Query("MATCH (n)-[r]-() RETURN DISTINCT n")
-    List<Node> findNodesWithRelationships();
+    @Query("MATCH (n) WHERE toLower(n.label) CONTAINS toLower($query) OR " +
+           "toLower(n.type) CONTAINS toLower($query) OR " +
+           "ANY(prop IN keys(n) WHERE toLower(toString(n[prop])) CONTAINS toLower($query)) " +
+           "RETURN n")
+    List<Node> searchNodes(@Param("query") String query);
 }
