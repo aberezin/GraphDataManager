@@ -1,6 +1,10 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.RelationshipProperties;
+import org.springframework.data.neo4j.core.schema.TargetNode;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -9,33 +13,41 @@ import java.util.Map;
 public class Relationship {
     
     @Id
-    @GeneratedValue
-    private Long id;
+    @GeneratedValue(UUIDStringGenerator.class)
+    private String id;
     
-    @Property("type")
     private String type;
     
     @TargetNode
     private Node target;
     
-    @DynamicProperties
+    private Node source;
+    
     private Map<String, Object> properties = new HashMap<>();
     
     // Default constructor
     public Relationship() {
     }
     
-    public Relationship(String type, Node target) {
+    public Relationship(String type, Node source, Node target) {
         this.type = type;
+        this.source = source;
         this.target = target;
     }
     
+    public Relationship(String type, Node source, Node target, Map<String, Object> properties) {
+        this.type = type;
+        this.source = source;
+        this.target = target;
+        this.properties = properties;
+    }
+    
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
     
@@ -45,6 +57,14 @@ public class Relationship {
     
     public void setType(String type) {
         this.type = type;
+    }
+    
+    public Node getSource() {
+        return source;
+    }
+    
+    public void setSource(Node source) {
+        this.source = source;
     }
     
     public Node getTarget() {
@@ -69,5 +89,9 @@ public class Relationship {
     
     public Object getProperty(String key) {
         return this.properties.get(key);
+    }
+    
+    public void removeProperty(String key) {
+        this.properties.remove(key);
     }
 }

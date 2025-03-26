@@ -14,7 +14,7 @@ public class Project {
     @Column(name = "name", nullable = false)
     private String name;
     
-    @Column(name = "description", length = 1000)
+    @Column(name = "description")
     private String description;
     
     @Column(name = "created_at", nullable = false)
@@ -56,6 +56,7 @@ public class Project {
     
     public void setName(String name) {
         this.name = name;
+        this.updatedAt = LocalDateTime.now();
     }
     
     public String getDescription() {
@@ -64,6 +65,7 @@ public class Project {
     
     public void setDescription(String description) {
         this.description = description;
+        this.updatedAt = LocalDateTime.now();
     }
     
     public LocalDateTime getCreatedAt() {
@@ -88,9 +90,10 @@ public class Project {
     
     public void setUser(User user) {
         this.user = user;
+        this.updatedAt = LocalDateTime.now();
     }
     
-    // Update timestamp before update
+    // Pre-update callback
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();

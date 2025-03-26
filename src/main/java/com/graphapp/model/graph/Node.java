@@ -1,33 +1,30 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.*;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.DynamicLabels;
+import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-@Node
+@org.springframework.data.neo4j.core.schema.Node
 public class Node {
     
     @Id
-    @GeneratedValue
-    private Long id;
+    @GeneratedValue(UUIDStringGenerator.class)
+    private String id;
     
-    @Property("label")
     private String label;
     
-    @Property("type")
     private String type;
     
-    @DynamicProperties
+    @DynamicLabels
+    private Set<String> additionalLabels = new HashSet<>();
+    
     private Map<String, Object> properties = new HashMap<>();
-    
-    @Relationship(type = "CONNECTS_TO", direction = Relationship.Direction.OUTGOING)
-    private Set<Relationship> outgoingRelationships = new HashSet<>();
-    
-    @Relationship(type = "CONNECTS_TO", direction = Relationship.Direction.INCOMING)
-    private Set<Relationship> incomingRelationships = new HashSet<>();
     
     // Default constructor
     public Node() {
@@ -38,12 +35,18 @@ public class Node {
         this.type = type;
     }
     
+    public Node(String label, String type, Map<String, Object> properties) {
+        this.label = label;
+        this.type = type;
+        this.properties = properties;
+    }
+    
     // Getters and Setters
-    public Long getId() {
+    public String getId() {
         return id;
     }
     
-    public void setId(Long id) {
+    public void setId(String id) {
         this.id = id;
     }
     
@@ -63,6 +66,22 @@ public class Node {
         this.type = type;
     }
     
+    public Set<String> getAdditionalLabels() {
+        return additionalLabels;
+    }
+    
+    public void setAdditionalLabels(Set<String> additionalLabels) {
+        this.additionalLabels = additionalLabels;
+    }
+    
+    public void addLabel(String label) {
+        this.additionalLabels.add(label);
+    }
+    
+    public void removeLabel(String label) {
+        this.additionalLabels.remove(label);
+    }
+    
     public Map<String, Object> getProperties() {
         return properties;
     }
@@ -79,28 +98,7 @@ public class Node {
         return this.properties.get(key);
     }
     
-    public Set<Relationship> getOutgoingRelationships() {
-        return outgoingRelationships;
-    }
-    
-    public void setOutgoingRelationships(Set<Relationship> outgoingRelationships) {
-        this.outgoingRelationships = outgoingRelationships;
-    }
-    
-    public Set<Relationship> getIncomingRelationships() {
-        return incomingRelationships;
-    }
-    
-    public void setIncomingRelationships(Set<Relationship> incomingRelationships) {
-        this.incomingRelationships = incomingRelationships;
-    }
-    
-    // Helper methods
-    public void addOutgoingRelationship(Relationship relationship) {
-        this.outgoingRelationships.add(relationship);
-    }
-    
-    public void addIncomingRelationship(Relationship relationship) {
-        this.incomingRelationships.add(relationship);
+    public void removeProperty(String key) {
+        this.properties.remove(key);
     }
 }
