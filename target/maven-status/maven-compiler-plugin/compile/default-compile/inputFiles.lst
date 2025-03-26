@@ -1,4 +1,3 @@
-/home/runner/workspace/src/main/java/com/graphapp/model/graph/Node.java
 /home/runner/workspace/src/main/java/com/graphapp/controller/GraphDataController.java
 /home/runner/workspace/src/main/java/com/graphapp/repository/graph/RelationshipRepository.java
 /home/runner/workspace/src/main/java/com/graphapp/controller/RelationalDataController.java
@@ -13,5 +12,6 @@
 /home/runner/workspace/src/main/java/com/graphapp/Application.java
 /home/runner/workspace/src/main/java/com/graphapp/config/Neo4jConfig.java
 /home/runner/workspace/src/main/java/com/graphapp/config/WebConfig.java
+/home/runner/workspace/src/main/java/com/graphapp/model/graph/GraphNode.java
 /home/runner/workspace/src/main/java/com/graphapp/repository/relational/UserRepository.java
 /home/runner/workspace/src/main/java/com/graphapp/service/RelationalDataService.java
