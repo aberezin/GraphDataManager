@@ -2,7 +2,7 @@
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS users;
 
--- Create tables
+-- Create users table
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -11,24 +11,28 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(50)
 );
 
+-- Create projects table
 CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
-    description VARCHAR(500),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    description TEXT,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
     user_id INTEGER,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Insert sample data for development
-INSERT INTO users (username, email, first_name, last_name) VALUES
-    ('john_doe', 'john.doe@example.com', 'John', 'Doe'),
-    ('jane_smith', 'jane.smith@example.com', 'Jane', 'Smith'),
-    ('bob_johnson', 'bob.johnson@example.com', 'Bob', 'Johnson');
+-- Insert sample users
+INSERT INTO users (username, email, first_name, last_name)
+VALUES
+    ('johndoe', 'john.doe@example.com', 'John', 'Doe'),
+    ('janedoe', 'jane.doe@example.com', 'Jane', 'Doe'),
+    ('bobsmith', 'bob.smith@example.com', 'Bob', 'Smith');
 
-INSERT INTO projects (name, description, user_id) VALUES
-    ('Knowledge Graph', 'A project to represent organizational knowledge as a graph', 1),
-    ('Social Network Analysis', 'Analyzing connections between people in a social network', 1),
-    ('Recommendation Engine', 'Graph-based recommendation system for products', 2),
-    ('Data Visualization Tool', 'Tool to visualize complex data relationships', 3);
+-- Insert sample projects
+INSERT INTO projects (name, description, created_at, updated_at, user_id)
+VALUES
+    ('Social Network Analysis', 'Analyzing connections between people in a social network', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+    ('Knowledge Graph', 'Building a knowledge graph for a specific domain', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+    ('Supply Chain Visualization', 'Modeling supply chain dependencies as a graph', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 2),
+    ('Recommendation System', 'Product recommendation system based on user preferences', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 3);
