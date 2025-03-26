@@ -23,9 +23,18 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     // Clear existing visualization
     d3.select(svgRef.current).selectAll("*").remove();
 
+    // Transform relationships to proper link data format
+    const linkData = relationships.map(rel => ({
+      source: rel.source?.id || 0,
+      target: rel.target?.id || 0,
+      type: rel.type,
+      id: rel.id,
+      properties: rel.properties
+    }));
+
     // Create the simulation
     const simulation = d3.forceSimulation(nodes as d3.SimulationNodeDatum[])
-      .force('link', d3.forceLink(relationships)
+      .force('link', d3.forceLink(linkData as d3.SimulationLinkDatum<d3.SimulationNodeDatum>[])
         .id((d: any) => d.id)
         .distance(100))
       .force('charge', d3.forceManyBody().strength(-300))
@@ -56,7 +65,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
       .attr('stroke', '#999')
       .attr('stroke-opacity', 0.6)
       .selectAll('line')
-      .data(relationships)
+      .data(linkData)
       .join('line')
       .attr('stroke-width', 2);
 
@@ -87,7 +96,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({
     // Add relationship labels
     g.append('g')
       .selectAll('.link-label')
-      .data(relationships)
+      .data(linkData)
       .join('text')
       .attr('class', 'link-label')
       .attr('font-size', '8px')
