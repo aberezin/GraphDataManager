@@ -1,14 +1,26 @@
 import axios from 'axios';
 import { NodeType, RelationshipType, UserType, ProjectType } from '../types';
 
-// For Replit environment, we'll use a direct URL that works in their environment
-const API_BASE_URL = 'http://localhost:8080/api';
+// In Replit environment, we need to use a different approach
+const isReplit = window.location.hostname.includes('replit');
+let API_BASE_URL = '';
+
+// Dynamic API URL based on environment
+if (isReplit) {
+  // In Replit, the backend is accessible at the same hostname/origin
+  API_BASE_URL = '/api';
+  console.log("Using relative API path in Replit environment");
+} else {
+  // Local development
+  API_BASE_URL = 'http://localhost:8080/api';
+  console.log("Using localhost API path in development environment");
+}
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
-console.log('API Base URL:', API_BASE_URL);
+console.log('API Base URL set to:', API_BASE_URL);
 
 // Graph Data API
 
