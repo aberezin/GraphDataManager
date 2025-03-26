@@ -1,17 +1,18 @@
 package com.graphapp.service;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.graphapp.model.relational.Project;
 import com.graphapp.model.relational.User;
 import com.graphapp.repository.relational.ProjectRepository;
 import com.graphapp.repository.relational.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Service for managing relational data (users and projects).
@@ -22,18 +23,22 @@ public class RelationalDataService {
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
     
+    /**
+     * Constructor for RelationalDataService.
+     * 
+     * @param userRepository The user repository.
+     * @param projectRepository The project repository.
+     */
     @Autowired
     public RelationalDataService(UserRepository userRepository, ProjectRepository projectRepository) {
         this.userRepository = userRepository;
         this.projectRepository = projectRepository;
     }
     
-    // User operations
-    
     /**
      * Get all users.
      * 
-     * @return A list of all users.
+     * @return The list of users.
      */
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -43,10 +48,10 @@ public class RelationalDataService {
      * Get a user by ID.
      * 
      * @param id The ID of the user.
-     * @return The user, or null if not found.
+     * @return An Optional containing the user if found.
      */
-    public User getUserById(Long id) {
-        return userRepository.findById(id).orElse(null);
+    public Optional<User> getUserById(Long id) {
+        return userRepository.findById(id);
     }
     
     /**
@@ -57,102 +62,103 @@ public class RelationalDataService {
      */
     @Transactional
     public User createUser(User user) {
-        // Validation
-        if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be empty");
-        }
-        
-        if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
-            throw new IllegalArgumentException("Email cannot be empty");
-        }
-        
-        // Check for duplicate username or email
         if (userRepository.existsByUsername(user.getUsername())) {
-            throw new IllegalArgumentException("Username already exists");
+            throw new RuntimeException("Username already exists: " + user.getUsername());
         }
-        
         if (userRepository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new RuntimeException("Email already exists: " + user.getEmail());
         }
-        
         return userRepository.save(user);
     }
     
     /**
-     * Update an existing user.
+     * Update a user.
      * 
      * @param id The ID of the user to update.
      * @param userDetails The updated user details.
-     * @return The updated user, or null if not found.
+     * @return The updated user.
+     * @throws RuntimeException if the user is not found.
      */
     @Transactional
     public User updateUser(Long id, User userDetails) {
-        Optional<User> optionalUser = userRepository.findById(id);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            
-            // Update username if provided and not duplicate
-            if (userDetails.getUsername() != null && !userDetails.getUsername().equals(user.getUsername())) {
-                if (userRepository.existsByUsername(userDetails.getUsername())) {
-                    throw new IllegalArgumentException("Username already exists");
-                }
-                user.setUsername(userDetails.getUsername());
-            }
-            
-            // Update email if provided and not duplicate
-            if (userDetails.getEmail() != null && !userDetails.getEmail().equals(user.getEmail())) {
-                if (userRepository.existsByEmail(userDetails.getEmail())) {
-                    throw new IllegalArgumentException("Email already exists");
-                }
-                user.setEmail(userDetails.getEmail());
-            }
-            
-            // Update other fields if provided
-            if (userDetails.getFirstName() != null) {
-                user.setFirstName(userDetails.getFirstName());
-            }
-            
-            if (userDetails.getLastName() != null) {
-                user.setLastName(userDetails.getLastName());
-            }
-            
-            return userRepository.save(user);
-        }
-        return null;
+        return userRepository.findById(id)
+                .map(existingUser -> {
+                    if (userDetails.getUsername() != null && 
+                        !userDetails.getUsername().equals(existingUser.getUsername())) {
+                        if (userRepository.existsByUsername(userDetails.getUsername())) {
+                            throw new RuntimeException("Username already exists: " + userDetails.getUsername());
+                        }
+                        existingUser.setUsername(userDetails.getUsername());
+                    }
+                    
+                    if (userDetails.getEmail() != null && 
+                        !userDetails.getEmail().equals(existingUser.getEmail())) {
+                        if (userRepository.existsByEmail(userDetails.getEmail())) {
+                            throw new RuntimeException("Email already exists: " + userDetails.getEmail());
+                        }
+                        existingUser.setEmail(userDetails.getEmail());
+                    }
+                    
+                    if (userDetails.getFirstName() != null) {
+                        existingUser.setFirstName(userDetails.getFirstName());
+                    }
+                    
+                    if (userDetails.getLastName() != null) {
+                        existingUser.setLastName(userDetails.getLastName());
+                    }
+                    
+                    return userRepository.save(existingUser);
+                })
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
     }
     
     /**
-     * Delete a user by ID.
+     * Delete a user.
      * 
      * @param id The ID of the user to delete.
-     * @return True if the user was deleted, false otherwise.
+     * @throws RuntimeException if the user is not found.
      */
     @Transactional
-    public boolean deleteUser(Long id) {
-        if (userRepository.existsById(id)) {
-            userRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public void deleteUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        userRepository.delete(user);
     }
     
     /**
-     * Search for users by username, email, first name, or last name.
+     * Find a user by username.
      * 
-     * @param query The search query.
-     * @return A list of users matching the search criteria.
+     * @param username The username.
+     * @return An Optional containing the user if found.
      */
-    public List<User> searchUsers(String query) {
-        return userRepository.findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-                query, query, query, query);
+    public Optional<User> findUserByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
     
-    // Project operations
+    /**
+     * Find a user by email.
+     * 
+     * @param email The email.
+     * @return An Optional containing the user if found.
+     */
+    public Optional<User> findUserByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+    
+    /**
+     * Search users by various criteria.
+     * 
+     * @param query The search query.
+     * @return The list of users.
+     */
+    public List<User> searchUsers(String query) {
+        return userRepository.searchUsers(query);
+    }
     
     /**
      * Get all projects.
      * 
-     * @return A list of all projects.
+     * @return The list of projects.
      */
     public List<Project> getAllProjects() {
         return projectRepository.findAll();
@@ -162,20 +168,10 @@ public class RelationalDataService {
      * Get a project by ID.
      * 
      * @param id The ID of the project.
-     * @return The project, or null if not found.
+     * @return An Optional containing the project if found.
      */
-    public Project getProjectById(Long id) {
-        return projectRepository.findById(id).orElse(null);
-    }
-    
-    /**
-     * Get projects by user ID.
-     * 
-     * @param userId The ID of the user.
-     * @return A list of projects belonging to the user.
-     */
-    public List<Project> getProjectsByUserId(Long userId) {
-        return projectRepository.findByUserId(userId);
+    public Optional<Project> getProjectById(Long id) {
+        return projectRepository.findById(id);
     }
     
     /**
@@ -186,90 +182,118 @@ public class RelationalDataService {
      */
     @Transactional
     public Project createProject(Project project) {
-        // Validation
-        if (project.getName() == null || project.getName().trim().isEmpty()) {
-            throw new IllegalArgumentException("Project name cannot be empty");
+        if (project.getUser() != null && project.getUser().getId() != null) {
+            User user = userRepository.findById(project.getUser().getId())
+                    .orElseThrow(() -> new RuntimeException("User not found with id: " + project.getUser().getId()));
+            project.setUser(user);
         }
         
-        if (project.getUser() == null || project.getUser().getId() == null) {
-            throw new IllegalArgumentException("Project must have a user");
-        }
-        
-        // Ensure the user exists
-        User user = userRepository.findById(project.getUser().getId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-        
-        // Set timestamps
         project.setCreatedAt(LocalDateTime.now());
         project.setUpdatedAt(LocalDateTime.now());
         
-        // Set user and save
-        project.setUser(user);
         return projectRepository.save(project);
     }
     
     /**
-     * Update an existing project.
+     * Update a project.
      * 
      * @param id The ID of the project to update.
      * @param projectDetails The updated project details.
-     * @return The updated project, or null if not found.
+     * @return The updated project.
+     * @throws RuntimeException if the project is not found.
      */
     @Transactional
     public Project updateProject(Long id, Project projectDetails) {
-        Optional<Project> optionalProject = projectRepository.findById(id);
-        if (optionalProject.isPresent()) {
-            Project project = optionalProject.get();
-            
-            if (projectDetails.getName() != null) {
-                project.setName(projectDetails.getName());
-            }
-            
-            if (projectDetails.getDescription() != null) {
-                project.setDescription(projectDetails.getDescription());
-            }
-            
-            // Update timestamp
-            project.setUpdatedAt(LocalDateTime.now());
-            
-            return projectRepository.save(project);
-        }
-        return null;
+        return projectRepository.findById(id)
+                .map(existingProject -> {
+                    if (projectDetails.getName() != null) {
+                        existingProject.setName(projectDetails.getName());
+                    }
+                    
+                    if (projectDetails.getDescription() != null) {
+                        existingProject.setDescription(projectDetails.getDescription());
+                    }
+                    
+                    if (projectDetails.getUser() != null && projectDetails.getUser().getId() != null) {
+                        User user = userRepository.findById(projectDetails.getUser().getId())
+                                .orElseThrow(() -> new RuntimeException("User not found with id: " + projectDetails.getUser().getId()));
+                        existingProject.setUser(user);
+                    }
+                    
+                    existingProject.setUpdatedAt(LocalDateTime.now());
+                    
+                    return projectRepository.save(existingProject);
+                })
+                .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
     }
     
     /**
-     * Delete a project by ID.
+     * Delete a project.
      * 
      * @param id The ID of the project to delete.
-     * @return True if the project was deleted, false otherwise.
+     * @throws RuntimeException if the project is not found.
      */
     @Transactional
-    public boolean deleteProject(Long id) {
-        if (projectRepository.existsById(id)) {
-            projectRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public void deleteProject(Long id) {
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found with id: " + id));
+        projectRepository.delete(project);
     }
     
     /**
-     * Search for projects by name or description.
+     * Find projects by user ID.
+     * 
+     * @param userId The user ID.
+     * @return The list of projects.
+     */
+    public List<Project> findProjectsByUserId(Long userId) {
+        return projectRepository.findByUserId(userId);
+    }
+    
+    /**
+     * Search projects by name or description.
      * 
      * @param query The search query.
-     * @return A list of projects matching the search criteria.
+     * @return The list of projects.
      */
     public List<Project> searchProjects(String query) {
-        return projectRepository.findByNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(
-                query, query);
+        return projectRepository.searchProjects(query);
     }
     
     /**
-     * Get recent projects.
+     * Get recent projects up to the given limit.
      * 
      * @param limit The maximum number of projects to return.
-     * @return A list of recent projects.
+     * @return The list of projects.
      */
     public List<Project> getRecentProjects(int limit) {
         return projectRepository.findRecentProjects(limit);
+    }
+    
+    /**
+     * Get statistics about users and projects.
+     * 
+     * @return A map containing various statistics.
+     */
+    public Map<String, Object> getStatistics() {
+        Map<String, Object> statistics = new HashMap<>();
+        
+        // User statistics
+        statistics.put("totalUsers", userRepository.count());
+        statistics.put("usersWithProjects", userRepository.findUsersWithProjects().size());
+        
+        // Project statistics
+        statistics.put("totalProjects", projectRepository.count());
+        
+        // Projects per user
+        Map<Long, Long> projectsPerUser = new HashMap<>();
+        projectRepository.countProjectsByUser().forEach(result -> {
+            Long userId = (Long) result[0];
+            Long count = (Long) result[1];
+            projectsPerUser.put(userId, count);
+        });
+        statistics.put("projectsPerUser", projectsPerUser);
+        
+        return statistics;
     }
 }

@@ -1,14 +1,12 @@
 package com.graphapp.model.relational;
 
 import javax.persistence.*;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * Represents a user in the relational database.
+ * Represents a User in the relational database.
  */
 @Entity
 @Table(name = "users")
@@ -18,29 +16,26 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-    @Column(unique = true, nullable = false, length = 50)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
     
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    @Column(unique = true, nullable = false, length = 100)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
     
-    @Column(name = "first_name", length = 50)
+    @Column(name = "first_name")
     private String firstName;
     
-    @Column(name = "last_name", length = 50)
+    @Column(name = "last_name")
     private String lastName;
     
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<Project> projects = new ArrayList<>();
+    private List<Project> projects;
     
     /**
      * Default constructor.
      */
     public User() {
+        this.projects = new ArrayList<>();
     }
     
     /**
@@ -50,12 +45,13 @@ public class User {
      * @param email The email.
      */
     public User(String username, String email) {
+        this();
         this.username = username;
         this.email = email;
     }
     
     /**
-     * Constructor with username, email, first name and last name.
+     * Constructor with all fields.
      * 
      * @param username The username.
      * @param email The email.
@@ -63,8 +59,7 @@ public class User {
      * @param lastName The last name.
      */
     public User(String username, String email, String firstName, String lastName) {
-        this.username = username;
-        this.email = email;
+        this(username, email);
         this.firstName = firstName;
         this.lastName = lastName;
     }
@@ -88,7 +83,7 @@ public class User {
     }
     
     /**
-     * Get the username.
+     * Get the username of the user.
      * 
      * @return The username.
      */
@@ -97,7 +92,7 @@ public class User {
     }
     
     /**
-     * Set the username.
+     * Set the username of the user.
      * 
      * @param username The username.
      */
@@ -106,7 +101,7 @@ public class User {
     }
     
     /**
-     * Get the email.
+     * Get the email of the user.
      * 
      * @return The email.
      */
@@ -115,7 +110,7 @@ public class User {
     }
     
     /**
-     * Set the email.
+     * Set the email of the user.
      * 
      * @param email The email.
      */
@@ -124,7 +119,7 @@ public class User {
     }
     
     /**
-     * Get the first name.
+     * Get the first name of the user.
      * 
      * @return The first name.
      */
@@ -133,7 +128,7 @@ public class User {
     }
     
     /**
-     * Set the first name.
+     * Set the first name of the user.
      * 
      * @param firstName The first name.
      */
@@ -142,7 +137,7 @@ public class User {
     }
     
     /**
-     * Get the last name.
+     * Get the last name of the user.
      * 
      * @return The last name.
      */
@@ -151,7 +146,7 @@ public class User {
     }
     
     /**
-     * Set the last name.
+     * Set the last name of the user.
      * 
      * @param lastName The last name.
      */
@@ -160,9 +155,20 @@ public class User {
     }
     
     /**
+     * Get the full name of the user.
+     * 
+     * @return The full name.
+     */
+    public String getFullName() {
+        return (firstName != null ? firstName : "") + 
+               (firstName != null && lastName != null ? " " : "") + 
+               (lastName != null ? lastName : "");
+    }
+    
+    /**
      * Get the projects of the user.
      * 
-     * @return The projects.
+     * @return The list of projects.
      */
     public List<Project> getProjects() {
         return projects;
@@ -171,7 +177,7 @@ public class User {
     /**
      * Set the projects of the user.
      * 
-     * @param projects The projects.
+     * @param projects The list of projects.
      */
     public void setProjects(List<Project> projects) {
         this.projects = projects;
@@ -183,7 +189,10 @@ public class User {
      * @param project The project to add.
      */
     public void addProject(Project project) {
-        projects.add(project);
+        if (this.projects == null) {
+            this.projects = new ArrayList<>();
+        }
+        this.projects.add(project);
         project.setUser(this);
     }
     
@@ -193,8 +202,25 @@ public class User {
      * @param project The project to remove.
      */
     public void removeProject(Project project) {
-        projects.remove(project);
-        project.setUser(null);
+        if (this.projects != null) {
+            this.projects.remove(project);
+            project.setUser(null);
+        }
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        User user = (User) o;
+        
+        return Objects.equals(id, user.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
     
     @Override

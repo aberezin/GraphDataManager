@@ -1,16 +1,16 @@
 package com.graphapp.repository.relational;
 
+import com.graphapp.model.relational.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-
-import com.graphapp.model.relational.User;
-
 /**
- * Repository interface for User entities.
- * This interface provides methods to perform CRUD operations on User entities.
+ * Repository for User entities in the relational database.
  */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
@@ -18,41 +18,86 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /**
      * Find a user by username.
      * 
-     * @param username The username to search for.
-     * @return An optional containing the user if found, or empty if not found.
+     * @param username The username.
+     * @return An Optional containing the user if found.
      */
     Optional<User> findByUsername(String username);
     
     /**
      * Find a user by email.
      * 
-     * @param email The email to search for.
-     * @return An optional containing the user if found, or empty if not found.
+     * @param email The email.
+     * @return An Optional containing the user if found.
      */
     Optional<User> findByEmail(String email);
     
     /**
-     * Check if a user with the given username exists.
+     * Find users by first name.
      * 
-     * @param username The username to check.
-     * @return True if a user with the username exists, false otherwise.
+     * @param firstName The first name.
+     * @return The list of users.
+     */
+    List<User> findByFirstName(String firstName);
+    
+    /**
+     * Find users by last name.
+     * 
+     * @param lastName The last name.
+     * @return The list of users.
+     */
+    List<User> findByLastName(String lastName);
+    
+    /**
+     * Find users by first name and last name.
+     * 
+     * @param firstName The first name.
+     * @param lastName The last name.
+     * @return The list of users.
+     */
+    List<User> findByFirstNameAndLastName(String firstName, String lastName);
+    
+    /**
+     * Check if a username exists.
+     * 
+     * @param username The username.
+     * @return True if the username exists, false otherwise.
      */
     boolean existsByUsername(String username);
     
     /**
-     * Check if a user with the given email exists.
+     * Check if an email exists.
      * 
-     * @param email The email to check.
-     * @return True if a user with the email exists, false otherwise.
+     * @param email The email.
+     * @return True if the email exists, false otherwise.
      */
     boolean existsByEmail(String email);
     
     /**
-     * Search for users by username, email, first name, or last name containing the given text.
+     * Search users by username, email, first name, or last name.
      * 
-     * @param searchText The text to search for.
-     * @return A list of users matching the search criteria.
+     * @param query The search query.
+     * @return The list of users.
      */
-    List<User> findByUsernameContainingIgnoreCaseOrEmailContainingIgnoreCaseOrFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-            String searchText, String searchText2, String searchText3, String searchText4);
+    @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(u.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
+           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))")
+    List<User> searchUsers(@Param("query") String query);
+    
+    /**
+     * Find users that have projects.
+     * 
+     * @return The list of users.
+     */
+    @Query("SELECT DISTINCT u FROM User u JOIN u.projects")
+    List<User> findUsersWithProjects();
+    
+    /**
+     * Count users by the number of projects they have.
+     * 
+     * @param minProjectCount The minimum number of projects.
+     * @return The list of users.
+     */
+    @Query("SELECT u FROM User u WHERE SIZE(u.projects) >= :minProjectCount")
+    List<User> findUsersByMinProjectCount(@Param("minProjectCount") int minProjectCount);
 }

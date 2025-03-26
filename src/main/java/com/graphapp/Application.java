@@ -2,13 +2,17 @@ package com.graphapp;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 
 /**
- * Main application class for the Graph App.
+ * Main application class.
  */
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.graphapp"})
+@EntityScan(basePackages = {"com.graphapp.model.relational"})
+@EnableJpaRepositories(basePackages = {"com.graphapp.repository.relational"})
+@EnableNeo4jRepositories(basePackages = {"com.graphapp.repository.graph"})
 public class Application {
     
     /**

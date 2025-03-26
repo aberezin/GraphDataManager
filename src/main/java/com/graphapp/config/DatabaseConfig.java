@@ -1,63 +1,80 @@
 package com.graphapp.config;
 
-import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.jdbc.datasource.init.DataSourceInitializer;
-import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
+import org.springframework.context.annotation.Profile;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
+import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.util.Properties;
 
 /**
- * Configuration for SQLite relational database.
+ * Configuration for relational database (SQLite).
  */
 @Configuration
-@EnableJpaRepositories(basePackages = "com.graphapp.repository.relational")
 @EnableTransactionManagement
 public class DatabaseConfig {
-
-    private final Environment env;
-
+    
+    @Value("${spring.datasource.url}")
+    private String databaseUrl;
+    
+    @Value("${spring.datasource.driver-class-name}")
+    private String databaseDriverClassName;
+    
     /**
-     * Constructor for DatabaseConfig.
+     * Configure the data source for SQLite.
      * 
-     * @param env The environment.
-     */
-    public DatabaseConfig(Environment env) {
-        this.env = env;
-    }
-
-    /**
-     * Create a DataSource for the SQLite database.
-     * 
-     * @return The DataSource.
+     * @return The data source.
      */
     @Bean
     public DataSource dataSource() {
-        DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
-        dataSourceBuilder.driverClassName(env.getProperty("spring.datasource.driver-class-name"));
-        dataSourceBuilder.url(env.getProperty("spring.datasource.url"));
-        return dataSourceBuilder.build();
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(databaseDriverClassName);
+        dataSource.setUrl(databaseUrl);
+        return dataSource;
     }
-
+    
     /**
-     * Initialize the database with schema and sample data.
+     * Configure the entity manager factory for JPA.
      * 
-     * @param dataSource The DataSource.
-     * @return The DataSourceInitializer.
+     * @return The entity manager factory.
      */
     @Bean
-    public DataSourceInitializer dataSourceInitializer(DataSource dataSource) {
-        ResourceDatabasePopulator resourceDatabasePopulator = new ResourceDatabasePopulator();
-        resourceDatabasePopulator.addScript(new ClassPathResource("schema.sql"));
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+        LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
+        em.setDataSource(dataSource());
+        em.setPackagesToScan("com.graphapp.model.relational");
         
-        DataSourceInitializer dataSourceInitializer = new DataSourceInitializer();
-        dataSourceInitializer.setDataSource(dataSource);
-        dataSourceInitializer.setDatabasePopulator(resourceDatabasePopulator);
-        return dataSourceInitializer;
+        HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
+        em.setJpaVendorAdapter(vendorAdapter);
+        
+        Properties properties = new Properties();
+        properties.setProperty("hibernate.hbm2ddl.auto", "update");
+        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.SQLiteDialect");
+        properties.setProperty("hibernate.show_sql", "true");
+        properties.setProperty("hibernate.format_sql", "true");
+        em.setJpaProperties(properties);
+        
+        return em;
+    }
+    
+    /**
+     * Configure the transaction manager for JPA.
+     * 
+     * @param emf The entity manager factory.
+     * @return The transaction manager.
+     */
+    @Bean
+    public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
+        JpaTransactionManager transactionManager = new JpaTransactionManager();
+        transactionManager.setEntityManagerFactory(emf);
+        return transactionManager;
     }
 }

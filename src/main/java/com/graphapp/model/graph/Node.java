@@ -1,18 +1,19 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Property;
-import org.springframework.data.neo4j.core.schema.DynamicLabels;
+import org.springframework.data.neo4j.core.schema.Node as Neo4jNode;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * Represents a node in the graph database.
+ * Represents a Node in the graph database.
  */
-@org.springframework.data.neo4j.core.schema.Node
+@Neo4jNode
 public class Node {
     
     @Id
@@ -25,8 +26,8 @@ public class Node {
     @Property("type")
     private String type;
     
-    @DynamicLabels
-    private Set<String> labels = new HashSet<>();
+    @Property("labels")
+    private List<String> labels;
     
     @Property("properties")
     private Map<String, Object> properties;
@@ -35,6 +36,8 @@ public class Node {
      * Default constructor.
      */
     public Node() {
+        this.labels = new ArrayList<>();
+        this.properties = new HashMap<>();
     }
     
     /**
@@ -44,27 +47,24 @@ public class Node {
      * @param type The type of the node.
      */
     public Node(String label, String type) {
+        this();
         this.label = label;
         this.type = type;
-        if (type != null) {
-            this.labels.add(type);
-        }
     }
     
     /**
-     * Constructor with label, type and properties.
+     * Constructor with all fields.
      * 
      * @param label The label of the node.
      * @param type The type of the node.
-     * @param properties The properties of the node.
+     * @param labels The list of labels.
+     * @param properties The map of properties.
      */
-    public Node(String label, String type, Map<String, Object> properties) {
+    public Node(String label, String type, List<String> labels, Map<String, Object> properties) {
         this.label = label;
         this.type = type;
-        this.properties = properties;
-        if (type != null) {
-            this.labels.add(type);
-        }
+        this.labels = labels != null ? labels : new ArrayList<>();
+        this.properties = properties != null ? properties : new HashMap<>();
     }
     
     /**
@@ -119,72 +119,112 @@ public class Node {
      */
     public void setType(String type) {
         this.type = type;
-        if (this.labels == null) {
-            this.labels = new HashSet<>();
-        }
-        if (type != null) {
-            this.labels.add(type);
-        }
     }
     
     /**
-     * Get the labels of the node.
+     * Get the list of labels.
      * 
-     * @return The labels.
+     * @return The list of labels.
      */
-    public Set<String> getLabels() {
+    public List<String> getLabels() {
         return labels;
     }
     
     /**
-     * Set the labels of the node.
+     * Set the list of labels.
      * 
-     * @param labels The labels.
+     * @param labels The list of labels.
      */
-    public void setLabels(Set<String> labels) {
+    public void setLabels(List<String> labels) {
         this.labels = labels;
     }
     
     /**
-     * Add a label to the node.
+     * Add a label to the list of labels.
      * 
      * @param label The label to add.
      */
     public void addLabel(String label) {
         if (this.labels == null) {
-            this.labels = new HashSet<>();
+            this.labels = new ArrayList<>();
         }
         this.labels.add(label);
     }
     
     /**
-     * Get the properties of the node.
+     * Get the map of properties.
      * 
-     * @return The properties.
+     * @return The map of properties.
      */
     public Map<String, Object> getProperties() {
         return properties;
     }
     
     /**
-     * Set the properties of the node.
+     * Set the map of properties.
      * 
-     * @param properties The properties.
+     * @param properties The map of properties.
      */
     public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
     }
     
     /**
-     * Add a property to the node.
+     * Add a property to the map of properties.
      * 
-     * @param key The property key.
-     * @param value The property value.
+     * @param key The key of the property.
+     * @param value The value of the property.
      */
     public void addProperty(String key, Object value) {
-        if (this.properties != null) {
-            this.properties.put(key, value);
+        if (this.properties == null) {
+            this.properties = new HashMap<>();
         }
+        this.properties.put(key, value);
+    }
+    
+    /**
+     * Get a property from the map of properties.
+     * 
+     * @param key The key of the property.
+     * @return The value of the property.
+     */
+    public Object getProperty(String key) {
+        return this.properties != null ? this.properties.get(key) : null;
+    }
+    
+    /**
+     * Check if the node has a property.
+     * 
+     * @param key The key of the property.
+     * @return True if the node has the property, false otherwise.
+     */
+    public boolean hasProperty(String key) {
+        return this.properties != null && this.properties.containsKey(key);
+    }
+    
+    /**
+     * Remove a property from the map of properties.
+     * 
+     * @param key The key of the property.
+     * @return The removed value, or null if the property was not found.
+     */
+    public Object removeProperty(String key) {
+        return this.properties != null ? this.properties.remove(key) : null;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        Node node = (Node) o;
+        
+        return id != null ? id.equals(node.id) : node.id == null;
+    }
+    
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
     
     @Override

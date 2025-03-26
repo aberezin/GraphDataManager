@@ -1,12 +1,13 @@
 package com.graphapp.model.relational;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import javax.persistence.*;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
- * Represents a project in the relational database.
+ * Represents a Project in the relational database.
  */
 @Entity
 @Table(name = "projects")
@@ -16,12 +17,10 @@ public class Project {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @NotBlank(message = "Project name is required")
-    @Size(min = 3, max = 100, message = "Project name must be between 3 and 100 characters")
-    @Column(nullable = false, length = 100)
+    @Column(name = "name", nullable = false)
     private String name;
     
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "description", columnDefinition = "TEXT")
     private String description;
     
     @Column(name = "created_at", nullable = false)
@@ -30,8 +29,9 @@ public class Project {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
     
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties("projects")
     private User user;
     
     /**
@@ -48,9 +48,8 @@ public class Project {
      * @param name The name of the project.
      */
     public Project(String name) {
+        this();
         this.name = name;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
     
     /**
@@ -60,25 +59,20 @@ public class Project {
      * @param description The description of the project.
      */
     public Project(String name, String description) {
-        this.name = name;
+        this(name);
         this.description = description;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
     
     /**
-     * Constructor with name, description and user.
+     * Constructor with name, description, and user.
      * 
      * @param name The name of the project.
      * @param description The description of the project.
-     * @param user The user who owns the project.
+     * @param user The user associated with the project.
      */
     public Project(String name, String description, User user) {
-        this.name = name;
-        this.description = description;
+        this(name, description);
         this.user = user;
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
     }
     
     /**
@@ -136,51 +130,43 @@ public class Project {
     }
     
     /**
-     * Get the creation date and time of the project.
+     * Get the creation date of the project.
      * 
-     * @return The creation date and time.
+     * @return The creation date.
      */
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
     
     /**
-     * Set the creation date and time of the project.
+     * Set the creation date of the project.
      * 
-     * @param createdAt The creation date and time.
+     * @param createdAt The creation date.
      */
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
     
     /**
-     * Get the last update date and time of the project.
+     * Get the update date of the project.
      * 
-     * @return The last update date and time.
+     * @return The update date.
      */
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
     
     /**
-     * Set the last update date and time of the project.
+     * Set the update date of the project.
      * 
-     * @param updatedAt The last update date and time.
+     * @param updatedAt The update date.
      */
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
     
     /**
-     * Update the last update date and time to now.
-     */
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-    
-    /**
-     * Get the user who owns the project.
+     * Get the user associated with the project.
      * 
      * @return The user.
      */
@@ -189,12 +175,27 @@ public class Project {
     }
     
     /**
-     * Set the user who owns the project.
+     * Set the user associated with the project.
      * 
      * @param user The user.
      */
     public void setUser(User user) {
         this.user = user;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        
+        Project project = (Project) o;
+        
+        return Objects.equals(id, project.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return id != null ? id.hashCode() : 0;
     }
     
     @Override
