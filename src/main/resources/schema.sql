@@ -14,23 +14,21 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS projects (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name VARCHAR(100) NOT NULL,
-    description TEXT,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+    description VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Insert sample data
-INSERT INTO users (username, email, first_name, last_name)
-VALUES 
-    ('johndoe', 'john.doe@example.com', 'John', 'Doe'),
-    ('janesmith', 'jane.smith@example.com', 'Jane', 'Smith'),
-    ('bobwilson', 'bob.wilson@example.com', 'Bob', 'Wilson');
+-- Insert sample data for development
+INSERT INTO users (username, email, first_name, last_name) VALUES
+    ('john_doe', 'john.doe@example.com', 'John', 'Doe'),
+    ('jane_smith', 'jane.smith@example.com', 'Jane', 'Smith'),
+    ('bob_johnson', 'bob.johnson@example.com', 'Bob', 'Johnson');
 
-INSERT INTO projects (name, description, created_at, updated_at, user_id)
-VALUES 
-    ('Graph Analysis Tool', 'A tool for visualizing and analyzing graph data structures', DATETIME('now', '-30 days'), DATETIME('now', '-5 days'), 1),
-    ('Data Integration Platform', 'Platform for integrating relational and graph data sources', DATETIME('now', '-60 days'), DATETIME('now', '-2 days'), 1),
-    ('Knowledge Graph Builder', 'Tool to create and maintain knowledge graphs from structured data', DATETIME('now', '-15 days'), DATETIME('now'), 2),
-    ('Network Visualization', 'Interactive visualization of network relationships', DATETIME('now', '-45 days'), DATETIME('now', '-10 days'), 3);
+INSERT INTO projects (name, description, user_id) VALUES
+    ('Knowledge Graph', 'A project to represent organizational knowledge as a graph', 1),
+    ('Social Network Analysis', 'Analyzing connections between people in a social network', 1),
+    ('Recommendation Engine', 'Graph-based recommendation system for products', 2),
+    ('Data Visualization Tool', 'Tool to visualize complex data relationships', 3);

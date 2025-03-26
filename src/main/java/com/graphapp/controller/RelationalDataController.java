@@ -8,7 +8,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -30,22 +29,15 @@ public class RelationalDataController {
     }
     
     @GetMapping("/users/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
         return relationalDataService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/users/username/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+    public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
         return relationalDataService.getUserByUsername(username)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-    
-    @GetMapping("/users/email/{email}")
-    public ResponseEntity<User> getUserByEmail(@PathVariable String email) {
-        return relationalDataService.getUserByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -53,33 +45,29 @@ public class RelationalDataController {
     @PostMapping("/users")
     public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
-            User createdUser = relationalDataService.createUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
+            return ResponseEntity.status(HttpStatus.CREATED).body(relationalDataService.createUser(user));
         } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @PutMapping("/users/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
         try {
-            return relationalDataService.updateUser(id, userDetails)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            return ResponseEntity.ok(relationalDataService.updateUser(id, userDetails));
         } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @DeleteMapping("/users/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        return relationalDataService.deleteUser(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            relationalDataService.deleteUser(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     @GetMapping("/users/search")
@@ -94,54 +82,47 @@ public class RelationalDataController {
     }
     
     @GetMapping("/projects/{id}")
-    public ResponseEntity<Project> getProjectById(@PathVariable Long id) {
+    public ResponseEntity<?> getProjectById(@PathVariable Long id) {
         return relationalDataService.getProjectById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
     
     @GetMapping("/projects/user/{userId}")
-    public ResponseEntity<?> getProjectsByUserId(@PathVariable Long userId) {
+    public ResponseEntity<List<Project>> getProjectsByUserId(@PathVariable Long userId) {
         try {
-            List<Project> projects = relationalDataService.getProjectsByUserId(userId);
-            return ResponseEntity.ok(projects);
+            return ResponseEntity.ok(relationalDataService.getProjectsByUserId(userId));
         } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(List.of());
         }
     }
     
     @PostMapping("/projects")
     public ResponseEntity<?> createProject(@RequestBody Project project) {
         try {
-            Project createdProject = relationalDataService.createProject(project);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdProject);
+            return ResponseEntity.status(HttpStatus.CREATED).body(relationalDataService.createProject(project));
         } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @PutMapping("/projects/{id}")
     public ResponseEntity<?> updateProject(@PathVariable Long id, @RequestBody Project projectDetails) {
         try {
-            return relationalDataService.updateProject(id, projectDetails)
-                    .map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
+            return ResponseEntity.ok(relationalDataService.updateProject(id, projectDetails));
         } catch (IllegalArgumentException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("error", e.getMessage());
-            return ResponseEntity.badRequest().body(error);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     
     @DeleteMapping("/projects/{id}")
-    public ResponseEntity<Void> deleteProject(@PathVariable Long id) {
-        return relationalDataService.deleteProject(id)
-                ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteProject(@PathVariable Long id) {
+        try {
+            relationalDataService.deleteProject(id);
+            return ResponseEntity.ok().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     
     @GetMapping("/projects/search")
@@ -152,5 +133,17 @@ public class RelationalDataController {
     @GetMapping("/projects/recent")
     public ResponseEntity<List<Project>> getRecentProjects() {
         return ResponseEntity.ok(relationalDataService.getRecentProjects());
+    }
+    
+    // Combined endpoints for dashboard
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> getDashboardData() {
+        List<User> recentUsers = relationalDataService.getAllUsers();
+        List<Project> recentProjects = relationalDataService.getRecentProjects();
+        
+        return ResponseEntity.ok(Map.of(
+                "users", recentUsers,
+                "projects", recentProjects
+        ));
     }
 }
