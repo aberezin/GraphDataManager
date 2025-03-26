@@ -1,51 +1,60 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
+import org.springframework.data.neo4j.core.schema.Property;
 import org.springframework.data.neo4j.core.schema.RelationshipProperties;
 import org.springframework.data.neo4j.core.schema.TargetNode;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+/**
+ * Represents a relationship between two nodes in the graph database
+ */
 @RelationshipProperties
 public class Relationship {
-    
+
     @Id
-    @GeneratedValue(UUIDStringGenerator.class)
-    private String id;
-    
+    @GeneratedValue
+    private Long id;
+
+    @Property("type")
     private String type;
-    
+
+    // Source node - needs to be handled differently in Neo4j
     private Node source;
-    
+
+    // Target node must be annotated with @TargetNode
     @TargetNode
     private Node target;
-    
+
+    // Dynamic properties stored as a map
     private Map<String, Object> properties = new HashMap<>();
-    
+
     public Relationship() {
+        // Default constructor required by Spring Data Neo4j
     }
-    
+
     public Relationship(String type, Node source, Node target) {
         this.type = type;
         this.source = source;
         this.target = target;
     }
-    
+
     public Relationship(String type, Node source, Node target, Map<String, Object> properties) {
         this.type = type;
         this.source = source;
         this.target = target;
-        this.properties = properties;
+        this.properties = properties != null ? properties : new HashMap<>();
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
@@ -80,21 +89,39 @@ public class Relationship {
     public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
     }
-    
+
     public void addProperty(String key, Object value) {
-        if (this.properties == null) {
-            this.properties = new HashMap<>();
-        }
         this.properties.put(key, value);
     }
-    
+
+    public Object getProperty(String key) {
+        return this.properties.get(key);
+    }
+
+    public void removeProperty(String key) {
+        this.properties.remove(key);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Relationship that = (Relationship) o;
+        return Objects.equals(id, that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
     @Override
     public String toString() {
         return "Relationship{" +
-                "id='" + id + '\'' +
+                "id=" + id +
                 ", type='" + type + '\'' +
-                ", source=" + (source != null ? source.getId() : "null") +
-                ", target=" + (target != null ? target.getId() : "null") +
+                ", source=" + (source != null ? source.getId() : null) +
+                ", target=" + (target != null ? target.getId() : null) +
                 ", properties=" + properties +
                 '}';
     }

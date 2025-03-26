@@ -1,63 +1,53 @@
 package com.graphapp.model.graph;
 
-import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
+import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Property;
-import org.springframework.data.neo4j.core.support.UUIDStringGenerator;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+/**
+ * Represents a node in the graph database
+ */
 @org.springframework.data.neo4j.core.schema.Node
 public class Node {
-    
+
     @Id
-    @GeneratedValue(UUIDStringGenerator.class)
-    private String id;
-    
-    private String type;
-    
+    @GeneratedValue
+    private Long id;
+
+    @Property("label")
     private String label;
-    
-    private List<String> additionalLabels = new ArrayList<>();
-    
-    @Property
+
+    @Property("type")
+    private String type;
+
+    // Dynamic properties stored as a map
     private Map<String, Object> properties = new HashMap<>();
-    
+
     public Node() {
-    }
-    
-    public Node(String type) {
-        this.type = type;
-    }
-    
-    public Node(String type, String label) {
-        this.type = type;
-        this.label = label;
-    }
-    
-    public Node(String type, String label, Map<String, Object> properties) {
-        this.type = type;
-        this.label = label;
-        this.properties = properties;
+        // Default constructor required by Spring Data Neo4j
     }
 
-    public String getId() {
+    public Node(String label, String type) {
+        this.label = label;
+        this.type = type;
+    }
+
+    public Node(String label, String type, Map<String, Object> properties) {
+        this.label = label;
+        this.type = type;
+        this.properties = properties != null ? properties : new HashMap<>();
+    }
+
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
     }
 
     public String getLabel() {
@@ -68,12 +58,12 @@ public class Node {
         this.label = label;
     }
 
-    public List<String> getAdditionalLabels() {
-        return additionalLabels;
+    public String getType() {
+        return type;
     }
 
-    public void setAdditionalLabels(List<String> additionalLabels) {
-        this.additionalLabels = additionalLabels;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public Map<String, Object> getProperties() {
@@ -83,28 +73,38 @@ public class Node {
     public void setProperties(Map<String, Object> properties) {
         this.properties = properties;
     }
-    
+
     public void addProperty(String key, Object value) {
-        if (this.properties == null) {
-            this.properties = new HashMap<>();
-        }
         this.properties.put(key, value);
     }
-    
-    public void addLabel(String label) {
-        if (this.additionalLabels == null) {
-            this.additionalLabels = new ArrayList<>();
-        }
-        this.additionalLabels.add(label);
+
+    public Object getProperty(String key) {
+        return this.properties.get(key);
     }
-    
+
+    public void removeProperty(String key) {
+        this.properties.remove(key);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Node node = (Node) o;
+        return Objects.equals(id, node.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
+
     @Override
     public String toString() {
         return "Node{" +
-                "id='" + id + '\'' +
-                ", type='" + type + '\'' +
+                "id=" + id +
                 ", label='" + label + '\'' +
-                ", additionalLabels=" + additionalLabels +
+                ", type='" + type + '\'' +
                 ", properties=" + properties +
                 '}';
     }

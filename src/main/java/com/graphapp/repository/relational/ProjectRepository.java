@@ -6,24 +6,53 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
+/**
+ * Repository interface for relational Project entities
+ */
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
-    
+
+    /**
+     * Find projects by name
+     */
+    List<Project> findByName(String name);
+
+    /**
+     * Find projects by user id
+     */
     List<Project> findByUserId(Long userId);
-    
-    @Query("SELECT p FROM Project p ORDER BY p.updatedAt DESC")
-    List<Project> findRecentProjects();
-    
+
+    /**
+     * Find projects created after a given date
+     */
+    List<Project> findByCreatedAtAfter(LocalDateTime date);
+
+    /**
+     * Find projects updated after a given date
+     */
+    List<Project> findByUpdatedAtAfter(LocalDateTime date);
+
+    /**
+     * Search projects by text (searches in name and description)
+     */
     @Query("SELECT p FROM Project p WHERE " +
-           "LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<Project> searchProjects(@Param("query") String query);
-    
-    @Query("SELECT p FROM Project p JOIN p.user u WHERE " + 
-           "LOWER(u.username) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
-           "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :query, '%'))")
-    List<Project> findProjectsByUserAttributes(@Param("query") String query);
+           "LOWER(p.name) LIKE LOWER(CONCAT('%', :text, '%')) OR " +
+           "LOWER(p.description) LIKE LOWER(CONCAT('%', :text, '%'))")
+    List<Project> searchProjects(@Param("text") String text);
+
+    /**
+     * Get a specific project with its user
+     */
+    @Query("SELECT p FROM Project p LEFT JOIN FETCH p.user WHERE p.id = :id")
+    Optional<Project> findByIdWithUser(@Param("id") Long id);
+
+    /**
+     * Get recent projects
+     */
+    @Query("SELECT p FROM Project p ORDER BY p.updatedAt DESC")
+    List<Project> findRecentProjects(org.springframework.data.domain.Pageable pageable);
 }
