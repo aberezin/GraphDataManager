@@ -47,7 +47,6 @@ task = "packager.installForAll"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "mvn spring-boot:run"
-waitForPort = 8080
 
 [deployment]
 run = ["sh", "-c", "cd frontend && npm install && npm run dev"]

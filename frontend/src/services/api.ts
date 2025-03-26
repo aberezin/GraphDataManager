@@ -1,11 +1,14 @@
 import axios from 'axios';
 import { NodeType, RelationshipType, UserType, ProjectType } from '../types';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+// For Replit environment, we'll use a direct URL that works in their environment
+const API_BASE_URL = 'http://localhost:8080/api';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';
+
+console.log('API Base URL:', API_BASE_URL);
 
 // Graph Data API
 
@@ -21,8 +24,15 @@ export const getNodeById = async (id: number): Promise<NodeType> => {
 };
 
 export const createNode = async (node: NodeType): Promise<NodeType> => {
-  const response = await axios.post('/graph/nodes', node);
-  return response.data;
+  console.log('Creating node with data:', node);
+  try {
+    const response = await axios.post('/graph/nodes', node);
+    console.log('Node creation response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error creating node:', error);
+    throw error;
+  }
 };
 
 export const updateNode = async (id: number, node: NodeType): Promise<NodeType> => {
