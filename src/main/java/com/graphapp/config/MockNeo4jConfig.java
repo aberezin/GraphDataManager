@@ -1,6 +1,3 @@
-// This class has been deprecated in favor of using a standalone Neo4j server
-// See the Neo4jConfig class which now handles both development and production environments
-/*
 package com.graphapp.config;
 
 import org.mockito.Mockito;
@@ -16,6 +13,7 @@ import org.neo4j.driver.SessionConfig;
 import org.neo4j.driver.exceptions.Neo4jException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.neo4j.config.AbstractNeo4jConfig;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
@@ -29,14 +27,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * Mock Neo4j configuration for development/testing.
+ * This provides a mock implementation of the Neo4j driver to avoid
+ * resource constraints and eliminate the need for a separate Neo4j server.
+ */
 @Configuration
 @EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
 @EnableTransactionManagement
-@Profile("mock")
+@Profile({"mock", "default"})  // Make this the default profile
 public class MockNeo4jConfig extends AbstractNeo4jConfig {
     
     @Bean
     @Override
+    @Primary
     public Driver driver() {
         Driver mockDriver = Mockito.mock(Driver.class);
         Session mockSession = Mockito.mock(Session.class);
@@ -72,8 +76,7 @@ public class MockNeo4jConfig extends AbstractNeo4jConfig {
         Mockito.when(mockTransaction.commitAsync()).thenReturn(voidStage);
         Mockito.when(mockTransaction.rollbackAsync()).thenReturn(voidStage);
         
-        System.out.println("Created mock Neo4j driver for development");
+        System.out.println("Created mock Neo4j driver for development to avoid resource constraints");
         return mockDriver;
     }
 }
-*/
