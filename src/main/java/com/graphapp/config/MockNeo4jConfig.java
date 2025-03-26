@@ -1,10 +1,16 @@
 package com.graphapp.config;
 
-import org.neo4j.driver.AuthTokens;
+import org.mockito.Mockito;
 import org.neo4j.driver.Driver;
-import org.neo4j.driver.GraphDatabase;
-import org.neo4j.harness.Neo4j;
-import org.neo4j.harness.Neo4jBuilders;
+import org.neo4j.driver.Session;
+import org.neo4j.driver.Result;
+import org.neo4j.driver.Record;
+import org.neo4j.driver.Transaction;
+import org.neo4j.driver.Value;
+import org.neo4j.driver.AccessMode;
+import org.neo4j.driver.Query;
+import org.neo4j.driver.SessionConfig;
+import org.neo4j.driver.exceptions.Neo4jException;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -12,61 +18,68 @@ import org.springframework.data.neo4j.config.AbstractNeo4jConfig;
 import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.annotation.PreDestroy;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Configuration for embedded Neo4j database (Development).
- * This creates a real in-memory Neo4j instance for development.
+ * Mock configuration for Neo4j database (Development).
+ * This creates a mocked version of Neo4j driver for lightweight development.
  */
 @Configuration
 @EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
 @EnableTransactionManagement
-@Profile("dev")
+@Profile({"default", "dev"})
 public class MockNeo4jConfig extends AbstractNeo4jConfig {
     
-    private Neo4j embeddedServer;
-
     /**
-     * Initialize the embedded Neo4j server.
-     * This will create an in-memory Neo4j database that listens on a random port.
+     * Create a mocked Neo4j driver.
+     * This is a lightweight alternative to a real embedded Neo4j server.
      * 
-     * @return The Neo4j test server instance.
-     */
-    @Bean
-    public Neo4j embeddedDatabaseServer() {
-        // Start in-memory embedded Neo4j server with default random ports
-        embeddedServer = Neo4jBuilders
-                .newInProcessBuilder()
-                .withDisabledServer() // Don't need HTTP server for our use case
-                .build();
-                
-        System.out.println("Started embedded Neo4j server at: " + embeddedServer.boltURI());
-        return embeddedServer;
-    }
-    
-    /**
-     * Configure the Neo4j driver for development with embedded database.
-     * 
-     * @return The Neo4j driver connected to the embedded server.
+     * @return A mocked Neo4j driver.
      */
     @Bean
     @Override
     public Driver driver() {
-        // Get the embedded database Neo4j server
-        Neo4j server = embeddedDatabaseServer();
+        Driver mockDriver = Mockito.mock(Driver.class);
+        Session mockSession = Mockito.mock(Session.class);
+        Transaction mockTransaction = Mockito.mock(Transaction.class);
+        Result mockResult = Mockito.mock(Result.class);
         
-        // Connect to the embedded Neo4j server using its Bolt URI
-        return GraphDatabase.driver(server.boltURI(), AuthTokens.none());
-    }
-    
-    /**
-     * Clean up resources when the application is shutting down.
-     */
-    @PreDestroy
-    public void stopNeo4j() {
-        if (embeddedServer != null) {
-            embeddedServer.close();
-            System.out.println("Embedded Neo4j server has been shut down");
-        }
+        // Configure the mock session
+        Mockito.when(mockDriver.session()).thenReturn(mockSession);
+        Mockito.when(mockDriver.session(Mockito.any(SessionConfig.class))).thenReturn(mockSession);
+        
+        // Configure the mock transaction
+        Mockito.when(mockSession.beginTransaction()).thenReturn(mockTransaction);
+        
+        // Configure the mock result
+        Mockito.when(mockTransaction.run(Mockito.anyString())).thenReturn(mockResult);
+        Mockito.when(mockTransaction.run(Mockito.anyString(), Mockito.anyMap())).thenReturn(mockResult);
+        Mockito.when(mockTransaction.run(Mockito.any(Query.class))).thenReturn(mockResult);
+        
+        Mockito.when(mockSession.run(Mockito.anyString())).thenReturn(mockResult);
+        Mockito.when(mockSession.run(Mockito.anyString(), Mockito.anyMap())).thenReturn(mockResult);
+        Mockito.when(mockSession.run(Mockito.any(Query.class))).thenReturn(mockResult);
+        
+        // Configure basic result behavior (empty results)
+        Mockito.when(mockResult.hasNext()).thenReturn(false);
+        Mockito.when(mockResult.list()).thenReturn(Collections.emptyList());
+        
+        // Configure basic completion stages for async operations
+        CompletionStage<Transaction> txStage = CompletableFuture.completedFuture(mockTransaction);
+        CompletionStage<Session> sessionStage = CompletableFuture.completedFuture(mockSession);
+        CompletionStage<Void> voidStage = CompletableFuture.completedFuture(null);
+        
+        Mockito.when(mockSession.closeAsync()).thenReturn(voidStage);
+        Mockito.when(mockTransaction.commitAsync()).thenReturn(voidStage);
+        Mockito.when(mockTransaction.rollbackAsync()).thenReturn(voidStage);
+        
+        System.out.println("Created mock Neo4j driver for development");
+        return mockDriver;
     }
 }
