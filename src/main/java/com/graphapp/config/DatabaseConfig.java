@@ -1,8 +1,14 @@
 package com.graphapp.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import java.util.Properties;
+
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.core.env.Environment;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -11,40 +17,42 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.sql.DataSource;
-import java.util.Properties;
-
 /**
- * Configuration class for SQLite database.
+ * SQLite database configuration.
+ * This class configures the SQLite database connection and JPA settings.
  */
 @Configuration
-@EnableJpaRepositories(basePackages = "com.graphapp.repository.relational")
 @EnableTransactionManagement
+@EnableJpaRepositories(
+    basePackages = "com.graphapp.repository.relational",
+    entityManagerFactoryRef = "entityManagerFactory",
+    transactionManagerRef = "transactionManager"
+)
+@PropertySource("classpath:application.properties")
 public class DatabaseConfig {
 
-    @Value("${spring.datasource.url}")
-    private String dataSourceUrl;
-
-    @Value("${spring.datasource.driver-class-name}")
-    private String dataSourceDriverClassName;
+    @Autowired
+    private Environment env;
 
     /**
-     * Configure the data source for SQLite.
-     * @return DataSource instance
+     * Creates the SQLite data source bean.
+     * 
+     * @return The configured SQLite data source.
      */
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setDriverClassName(dataSourceDriverClassName);
-        dataSource.setUrl(dataSourceUrl);
+        dataSource.setDriverClassName(env.getProperty("spring.datasource.driver-class-name"));
+        dataSource.setUrl(env.getProperty("spring.datasource.url"));
         return dataSource;
     }
 
     /**
-     * Configure the entity manager factory.
-     * @return LocalContainerEntityManagerFactoryBean instance
+     * Creates the entity manager factory bean.
+     * 
+     * @return The configured entity manager factory.
      */
-    @Bean
+    @Bean(name = "entityManagerFactory")
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource());
@@ -52,32 +60,25 @@ public class DatabaseConfig {
 
         HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
         em.setJpaVendorAdapter(vendorAdapter);
-        em.setJpaProperties(additionalProperties());
+        
+        Properties properties = new Properties();
+        properties.setProperty("hibernate.dialect", "org.sqlite.hibernate.dialect.SQLiteDialect");
+        properties.setProperty("hibernate.hbm2ddl.auto", env.getProperty("spring.jpa.hibernate.ddl-auto"));
+        properties.setProperty("hibernate.show_sql", env.getProperty("spring.jpa.show-sql"));
+        em.setJpaProperties(properties);
 
         return em;
     }
 
     /**
-     * Configure the transaction manager.
-     * @return PlatformTransactionManager instance
+     * Creates the transaction manager bean.
+     * 
+     * @return The configured transaction manager.
      */
-    @Bean
+    @Bean(name = "transactionManager")
     public PlatformTransactionManager transactionManager() {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
         return transactionManager;
-    }
-
-    /**
-     * Configure additional Hibernate properties for SQLite.
-     * @return Properties instance with Hibernate properties
-     */
-    private Properties additionalProperties() {
-        Properties properties = new Properties();
-        properties.setProperty("hibernate.hbm2ddl.auto", "update");
-        properties.setProperty("hibernate.dialect", "org.hibernate.dialect.SQLiteDialect");
-        properties.setProperty("hibernate.show_sql", "true");
-        properties.setProperty("hibernate.format_sql", "true");
-        return properties;
     }
 }

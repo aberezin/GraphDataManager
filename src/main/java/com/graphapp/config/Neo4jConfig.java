@@ -12,7 +12,8 @@ import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
- * Configuration class for Neo4j database in production.
+ * Neo4j configuration for production environment.
+ * This class configures the connection to a real Neo4j database.
  */
 @Configuration
 @EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
@@ -30,8 +31,9 @@ public class Neo4jConfig extends AbstractNeo4jConfig {
     private String password;
 
     /**
-     * Create a Neo4j driver bean.
-     * @return Neo4j driver instance
+     * Creates a Neo4j driver bean with the configured connection details.
+     * 
+     * @return The Neo4j driver.
      */
     @Bean
     @Override
