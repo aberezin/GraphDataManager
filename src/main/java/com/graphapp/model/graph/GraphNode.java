@@ -3,7 +3,7 @@ package com.graphapp.model.graph;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Property;
-import org.springframework.data.neo4j.core.schema.Node as Neo4jNode;
+import org.springframework.data.neo4j.core.schema.Node;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,8 +13,8 @@ import java.util.Map;
 /**
  * Represents a Node in the graph database.
  */
-@Neo4jNode
-public class Node {
+@Node
+public class GraphNode {
     
     @Id
     @GeneratedValue
@@ -35,7 +35,7 @@ public class Node {
     /**
      * Default constructor.
      */
-    public Node() {
+    public GraphNode() {
         this.labels = new ArrayList<>();
         this.properties = new HashMap<>();
     }
@@ -46,7 +46,7 @@ public class Node {
      * @param label The label of the node.
      * @param type The type of the node.
      */
-    public Node(String label, String type) {
+    public GraphNode(String label, String type) {
         this();
         this.label = label;
         this.type = type;
@@ -60,7 +60,7 @@ public class Node {
      * @param labels The list of labels.
      * @param properties The map of properties.
      */
-    public Node(String label, String type, List<String> labels, Map<String, Object> properties) {
+    public GraphNode(String label, String type, List<String> labels, Map<String, Object> properties) {
         this.label = label;
         this.type = type;
         this.labels = labels != null ? labels : new ArrayList<>();
@@ -217,7 +217,7 @@ public class Node {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         
-        Node node = (Node) o;
+        GraphNode node = (GraphNode) o;
         
         return id != null ? id.equals(node.id) : node.id == null;
     }
@@ -229,7 +229,7 @@ public class Node {
     
     @Override
     public String toString() {
-        return "Node{" +
+        return "GraphNode{" +
                 "id=" + id +
                 ", label='" + label + '\'' +
                 ", type='" + type + '\'' +

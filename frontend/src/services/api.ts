@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { NodeType, RelationshipType, UserType, ProjectType } from '../types';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'http://localhost:8080/api';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
