@@ -1,20 +1,8 @@
 import axios from 'axios';
 import { NodeType, RelationshipType, UserType, ProjectType } from '../types';
 
-// In Replit environment, we need to use a different approach
-const isReplit = window.location.hostname.includes('replit');
-let API_BASE_URL = '';
-
-// Dynamic API URL based on environment
-if (isReplit) {
-  // In Replit, the backend is accessible at the same hostname/origin
-  API_BASE_URL = '/api';
-  console.log("Using relative API path in Replit environment");
-} else {
-  // Local development
-  API_BASE_URL = 'http://localhost:8080/api';
-  console.log("Using localhost API path in development environment");
-}
+// With the proxy setup, we always use the same relative path
+const API_BASE_URL = '/api';
 
 // Configure axios defaults
 axios.defaults.baseURL = API_BASE_URL;
