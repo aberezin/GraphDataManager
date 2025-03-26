@@ -24,10 +24,15 @@ const apiProxy = createProxyMiddleware({
   }
 });
 
-// Also catch requests to /graph directly and redirect them to /api/graph
+// Also catch requests to /graph and /relational directly and redirect them to /api prefix
 app.use('/graph', (req, res) => {
   console.log(`Redirecting ${req.url} to /api${req.url}`);
   res.redirect(`/api/graph${req.url.replace('/graph', '')}`);
+});
+
+app.use('/relational', (req, res) => {
+  console.log(`Redirecting ${req.url} to /api${req.url}`);
+  res.redirect(`/api/relational${req.url.replace('/relational', '')}`);
 });
 
 // Use the proxy middleware

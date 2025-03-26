@@ -14,9 +14,10 @@ import java.util.Optional;
 
 /**
  * REST controller for relational data operations.
+ * Supporting both /api/relational and /relational URLs for backward compatibility
  */
 @RestController
-@RequestMapping("/api/relational")
+@RequestMapping({"${api.prefix:/api}/relational", "/relational"})
 public class RelationalDataController {
 
     private final RelationalDataService relationalDataService;

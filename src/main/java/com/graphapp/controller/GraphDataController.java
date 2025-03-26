@@ -14,9 +14,10 @@ import java.util.Optional;
 
 /**
  * REST controller for graph data operations.
+ * Supporting both /api/graph and /graph URLs for backward compatibility
  */
 @RestController
-@RequestMapping("/api/graph")
+@RequestMapping({"${api.prefix:/api}/graph", "/graph"})
 public class GraphDataController {
 
     private final GraphDataService graphDataService;
