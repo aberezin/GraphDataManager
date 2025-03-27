@@ -14,12 +14,11 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 /**
  * Configuration for Neo4j database.
  * This config connects to a standalone Neo4j server (either external or locally run).
- * Used only in production or dev environments, not in the default profile.
  */
 @Configuration
 @EnableNeo4jRepositories(basePackages = "com.graphapp.repository.graph")
 @EnableTransactionManagement
-@Profile({"prod", "dev"})  // Remove default profile which now uses mock config
+@Profile({"prod", "dev", "default"})
 public class Neo4jConfig extends AbstractNeo4jConfig {
     
     @Value("${spring.neo4j.uri:bolt://localhost:7687}")
