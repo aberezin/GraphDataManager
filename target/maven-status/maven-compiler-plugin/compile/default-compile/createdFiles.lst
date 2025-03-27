@@ -3,7 +3,6 @@ com/graphapp/model/graph/GraphNode.class
 com/graphapp/model/relational/Project.class
 com/graphapp/config/Neo4jConfig.class
 com/graphapp/model/relational/User.class
-com/graphapp/config/MockNeo4jConfig.class
 com/graphapp/service/RelationalDataService.class
 com/graphapp/repository/relational/ProjectRepository.class
 com/graphapp/service/GraphDataService.class
